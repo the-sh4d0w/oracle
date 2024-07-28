@@ -1,0 +1,18 @@
+#website_container {
+    background: blue;
+    height: auto;
+    width: 100%;
+}
+
+#website_button {
+    background: blue;
+    border: none;
+    min-width: 1;
+}
+
+#website_label {
+    background: white;
+    color: black;
+    width: 30vw;
+    padding: 0 1;
+}

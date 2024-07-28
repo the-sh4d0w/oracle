@@ -1,0 +1,154 @@
+#login_vert {
+    align: center middle;
+}
+
+.login_box {
+    width: auto;
+    height: auto;
+}
+
+#login_clock {
+    text-align: center;
+    margin: 0 0 3 0;
+    width: 35vw;
+}
+
+#login_user {
+    background: $surface;
+    border: round purple;
+    padding: 0 1;
+    width: 35vw;
+}
+
+#login_pwd {
+    background: $surface;
+    border: round purple;
+    padding: 0 1;
+    width: 35vw;
+}
+
+#login_box {
+    align: right middle;
+    height: 1;
+    width: 35vw;
+}
+
+.login_button {
+    background: white;
+    border: none;
+    text-style: reverse;
+    min-width: 1;
+}
+
+.login_button:focus {
+    text-style: reverse;
+}
+
+#login_button {
+    color: purple;
+}
+
+#login_hor {
+    align: right bottom;
+    height: auto;
+}
+
+#login_list {
+    color: blue;
+}
+
+#login_create {
+    color: green;
+    margin: 0 1;
+}
+
+#login_shutdown {
+    color: red;
+}
+
+CreateUserScreen {
+    align: center middle;
+}
+
+#lcreate_box {
+    border: round green;
+    width: auto;
+    height: auto;
+}
+
+#lcreate_title {
+    text-align: center;
+    width: 35vw;
+    margin: 0 0 1 0;
+}
+
+#lcreate_user {
+    background: $background;
+    border: round green;
+    padding: 0 1;
+    width: 35vw;
+}
+
+#lcreate_pwd {
+    background: $background;
+    border: round green;
+    padding: 0 1;
+    width: 35vw;
+}
+
+#lcreate_hor {
+    align: right middle;
+    width: 35vw;
+    height: auto;
+}
+
+#lcreate_create {
+    color: green;
+    margin: 0 1;
+}
+
+#lcreate_cancel {
+    color: red;
+}
+
+ListUsersScreen {
+    align: center middle;
+}
+
+#llist_box {
+    border: round blue;
+    width: 20vw;
+    height: auto;
+}
+
+#llist_title {
+    text-align: center;
+    width: 100%;
+}
+
+#llist_rule {
+    width: auto;
+    height: auto;
+    margin: 0;
+}
+
+#llist_ver {
+    width: 100%;
+    height: auto;
+    margin: 0 0 1 0;
+}
+
+.llist_label {
+    text-align: center;
+    width: 100%;
+}
+
+#llist_hor {
+    align: right middle;
+    width: 100%;
+    height: 1;
+}
+
+#llist_close {
+    color: blue;
+}

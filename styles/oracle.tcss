@@ -1,0 +1,53 @@
+#display {
+    width: 60%;
+}
+
+#display_buttons {
+    background: dimgray;
+    height: auto;
+}
+
+#display_inner {
+    height: 99%;
+}
+
+.display_button {
+    background: dimgray;
+    border: none;
+    min-width: 1;
+    color: $text-disabled;
+}
+
+.display_button_active {
+    color: $text;
+}
+
+.display_button_notification {
+    color: red;
+}
+
+.display_button:focus {
+    text-style: none;
+}
+
+#terminal {
+    background: black;
+}
+
+TextArea {
+    border: none;
+}
+
+Button:focus {
+    text-style: none;
+}
+
+ToastHolder {
+    align-horizontal: left;
+}
+
+Toast {
+    background: $surface;
+    margin-left: 2;
+    width: auto;
+}

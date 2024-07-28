@@ -1,0 +1,9 @@
+# format? -> JSON & pydantic
+
+needs:
+- notes -> tutorial
+- chat -> tutorial and guidance
+- emails? -> yes, script does everything!
+- news! -> definitely, show accomplishments
+- web browser? -> no, web does not change!
+- what else?

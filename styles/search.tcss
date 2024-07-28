@@ -1,0 +1,57 @@
+#search_main {
+    align: center middle;
+}
+
+#search_page {
+    align: center top;
+}
+
+#search_main_title {
+    color: blue;
+}
+
+#search_page_button {
+    # well, it works
+    background: white;
+    border: inner blue;
+    color: blue;
+    text-style: reverse;
+    min-width: 1;
+}
+
+#search_box {
+    border: round blue;
+    width: auto;
+    height: auto;
+}
+
+#search_horizontal {
+    height: auto;
+}
+
+.search_input {
+    background: $surface;
+    width: 30vw;
+    height: auto;
+    border: none;
+    padding: 0;
+    margin: 0 0 0 1;
+}
+
+#search_icon {
+    background: $surface;
+    border: none;
+    color: blue;
+    min-width: 1;
+}
+
+#search_results {
+    margin: 1;
+}
+
+* {
+    # bold doesn't seem to work (font); link-stlye in general doesn't work
+    link-background-hover: $surface;
+    link-color: gray;
+    link-style-hover: underline;
+}

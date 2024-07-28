@@ -1,0 +1,6 @@
+#boot_container {
+    background: black;
+    # a bit hacky
+    scrollbar-size-vertical: 0;
+    scrollbar-size-horizontal: 0;
+}

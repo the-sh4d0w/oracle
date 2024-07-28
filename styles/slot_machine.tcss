@@ -1,0 +1,28 @@
+#slot_horizontal {
+    align: center middle;
+}
+
+#slot_title_container {
+    align: center middle;
+    height: 20%;
+}
+
+#slot_title {
+    color: gold;
+    text-style: bold;
+}
+
+.slot {
+    border: red round;
+    padding: 3;
+}
+
+#slot_spin_container {
+    align: center middle;
+    height: 15%;
+}
+
+#slot_spin_button {
+    background: blue;
+    height: auto;
+}
