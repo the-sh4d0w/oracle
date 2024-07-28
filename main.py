@@ -170,6 +170,10 @@ class OracleApp(textual.app.App):
     ENABLE_COMMAND_PALETTE = False
     # load all styles from /styles
     CSS_PATH = list(pathlib.Path("styles").iterdir())
+    BINDINGS = [
+        textual.binding.Binding("f2", "screenshot",
+                                "Take a screenshot.", show=False)
+    ]
 
     user = textual.reactive.reactive("user")
     computer = textual.reactive.reactive("computer")
