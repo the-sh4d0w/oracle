@@ -1,9 +1,9 @@
 """Main code for the oracle game prototype."""
 
 import pathlib
-import sys
 import typing
 
+import click
 import textual.app
 import textual.binding
 import textual.containers
@@ -17,6 +17,7 @@ import textual.timer
 import textual.widget
 import textual.widgets
 
+import utils.command
 import screens.boot
 import screens.login
 import screens.desktop
@@ -231,24 +232,6 @@ class OracleApp(textual.app.App):
                 self._last_prompt = None
                 self._last_big_prompt = None
 
-    def parse(self, command_name: str, arguments: list[str]) -> str | None:
-        """Parse the command and return output.
-
-        Arguments:
-            - command_name: the command to parse for.
-            - arguments: arguments supplied.
-
-        Returns:
-            The output of the command.
-        """
-        Command.terminal = self.query_one(
-            "#terminal", widgets.terminal.Terminal)
-        Command.arguments = arguments
-        for command in Command.COMMANDS:
-            if command_name == command.name:
-                return command.run()
-        return f"Error: {command_name} is not a known command."
-
     def on_mount(self) -> None:
         """Do stuff on mount."""
         self.install_screen(screens.desktop.DesktopScreen(), "desktop")
@@ -277,9 +260,8 @@ class OracleApp(textual.app.App):
             self._output.append(event.value)
         else:
             # parse terminal input
-            values = event.value.split()
-            if len(values) > 0:
-                output = self.parse(values[0], values[1:])
+            if len(event.value) > 0:
+                output = utils.command.parse(event.value)
             else:
                 output = None
         # actually call the function if all inputs have been gathered
@@ -313,5 +295,12 @@ class OracleApp(textual.app.App):
             self._prompts = prompts
 
 
+@click.command()
+@click.option("-b", "--noboot", is_flag=True, help="Start without bootscreen.")
+def main(noboot: bool = False) -> None:
+    """The oracle game."""
+    OracleApp(no_boot=noboot).run()
+
+
 if __name__ == "__main__":
-    OracleApp("-b" in sys.argv or "--noboot" in sys.argv).run()
+    main()
