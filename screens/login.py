@@ -89,6 +89,10 @@ class LoginScreen(textual.screen.Screen):
 
     time = textual.reactive.reactive(datetime.datetime.now)
 
+    def __init__(self) -> None:
+        """Initialize the login screen."""
+        super().__init__(id="login")
+
     def login(self) -> bool:
         """Log in to computer."""
         saves: dict[str, utils.save.Save] = utils.save.get_newest_saves()

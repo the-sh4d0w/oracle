@@ -5,12 +5,14 @@ import textual.containers
 import textual.screen
 import textual.widgets
 
+import utils
+import utils.command
 import widgets.chat
 import widgets.terminal
 import widgets.website
 
 # TODO: improve
-# ui things: terminal✔; web browser✔; emails; chat program; news!; notes
+# ui things: terminal✔; web browser✔; emails; chat program✔; news!; notes (somewhat)
 # websites: search engine; wiki; social media; stock market; gambling
 
 
@@ -19,9 +21,14 @@ class DesktopScreen(textual.screen.Screen):
 
     def __init__(self) -> None:
         """Initialize the desktop screen."""
-        super().__init__()
+        super().__init__(id="desktop")
         self.websites: list[widgets.website.Website] \
             = widgets.website.get_websites()
+
+    def on_mount(self) -> None:
+        """Do stuff on mount."""
+        utils.command.TERMINAL = self.query_one(
+            "#terminal", widgets.terminal.Terminal)
 
     def compose(self) -> textual.app.ComposeResult:
         """Compose the ui."""

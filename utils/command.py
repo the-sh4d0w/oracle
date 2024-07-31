@@ -5,23 +5,36 @@ import importlib
 import inspect
 import pathlib
 import sys
-import typing
+
+import click
+
+import main
+import widgets
+import widgets.terminal
 
 
-def get_commands() -> dict[str, typing.Callable]:
+@click.command()
+def help() -> str:  # pylint:disable=redefined-builtin
+    """Show a list of all commands."""
+    return "\n".join([f"{name:10} {cmd.__doc__}"
+                      for name, cmd in COMMANDS.items()])
+
+
+def get_commands() -> dict[str, click.Command]:
     """Get all commands."""
-    # maybe replace with a more sophisticated method
-    results: dict[str, typing.Callable] = {}
+    results: dict[str, click.Command] = {"help": help}
     for file in pathlib.Path("commands").iterdir():
         filename: str = f"commands.{file.name.removesuffix('.py')}"
         importlib.import_module(filename)
         for name, obj in inspect.getmembers(sys.modules[filename]):
-            if isinstance(obj, typing.Callable):
+            if isinstance(obj, click.Command):
                 results[name] = obj
     return results
 
 
-COMMANDS: dict[str, typing.Callable] = get_commands()
+COMMANDS: dict[str, click.Command] = get_commands()
+ORACLE: main.OracleApp
+TERMINAL: widgets.terminal.Terminal
 
 
 def parse(text: str) -> str | None:

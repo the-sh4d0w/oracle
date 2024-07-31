@@ -17,7 +17,7 @@ class BootScreen(textual.screen.Screen):
 
     def __init__(self) -> None:
         """Initialize the boot screen."""
-        super().__init__()
+        super().__init__(id="boot")
         with pathlib.Path("boot.txt").open("r", encoding="utf-8") as file:
             self.lines: list[str] = file.read().split("\n")
         self.index: int = 0
