@@ -14,6 +14,11 @@ import textual.strip
 import textual.timer
 import textual.widget
 
+# TODO: scrolling?
+# TODO: history
+# TODO: ctrl+left and ctrl+right
+# FIXME: remove not needed stuff
+
 
 class Terminal(textual.widget.Widget, can_focus=True):
     """Custom terminal widget."""
@@ -36,8 +41,8 @@ class Terminal(textual.widget.Widget, can_focus=True):
                                 "delete right", show=False)
     ]
 
-    big_prompt: textual.reactive.reactive[str | None] = textual.reactive.reactive(
-        "[blue]┌([green]sh4d0w[/]@[yellow]oracle[/])-([red]~[/])[/]")
+    big_prompt: textual.reactive.reactive[str |
+                                          None] = textual.reactive.reactive(None)
     prompt = textual.reactive.reactive("[blue]└──$[/] ")
     value = textual.reactive.reactive("", always_update=True)
     cursor_position = textual.reactive.reactive(0)
@@ -64,6 +69,11 @@ class Terminal(textual.widget.Widget, can_focus=True):
         self._lines: list[list[rich.segment.Segment]] = []
         self._input: bool = False
         """Used for non-standard input. True supresses the Submitted event."""
+        # set correct theme color
+        color: str = self.app.get_css_variables()["primary"]
+        self.big_prompt = f"[{color}]┌([#00FF00]sh4d0w[/]@[#D2691E]" \
+            "oracle[/])-([#FF0000]~[/])[/]"
+        self.prompt = f"[{color}]└──$[/] "
 
     def watch_prompt(self, prompt: str) -> None:
         """Watch the prompt."""

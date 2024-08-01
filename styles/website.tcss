@@ -1,11 +1,11 @@
 #website_container {
-    background: #800080;
+    background: $primary;
     height: auto;
     width: 100%;
 }
 
 #website_button {
-    background: #800080;
+    background: $primary;
     border: none;
     min-width: 1;
 }

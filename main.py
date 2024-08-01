@@ -18,6 +18,7 @@ import textual.widget
 import textual.widgets
 
 import utils.command
+import utils.themes
 import screens.boot
 import screens.login
 import screens.desktop
@@ -34,7 +35,7 @@ import widgets.website
 
 # make all of this better
 # TODO: and add file system/computers
-# TODO: themes, why not?
+# TODO: config/settings?
 # FIXME: terminal probably needs to scroll
 
 
@@ -53,8 +54,9 @@ class OracleApp(textual.app.App):
     path = textual.reactive.reactive("~")
     do_input = textual.reactive.reactive(False, init=False)
     # need to initialize them here due to __init__ of App calling get_css_variables
-    theme: str | None = None
-    themes: dict[str, textual.design.ColorSystem] = {}
+    # FIXME: temp theme choice for now
+    theme: str | None = "purple"
+    themes: dict[str, textual.design.ColorSystem] = utils.themes.get_themes()
 
     def __init__(self, no_boot: bool = False) -> None:
         """Initialize the oracle app.

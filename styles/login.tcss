@@ -15,14 +15,14 @@
 
 #login_user {
     background: $surface;
-    border: round purple;
+    border: round $primary;
     padding: 0 1;
     width: 35vw;
 }
 
 #login_pwd {
     background: $surface;
-    border: round purple;
+    border: round $primary;
     padding: 0 1;
     width: 35vw;
 }
@@ -45,7 +45,7 @@
 }
 
 #login_button {
-    color: purple;
+    color: $primary;
 }
 
 #login_hor {

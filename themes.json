@@ -1,0 +1,18 @@
+[
+    {
+        "name": "purple",
+        "primary": "#800080"
+    },
+    {
+        "name": "red",
+        "primary": "#FF0000"
+    },
+    {
+        "name": "green",
+        "primary": "#00FF00"
+    },
+    {
+        "name": "blue",
+        "primary": "#0000FF"
+    }
+]
