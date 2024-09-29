@@ -42,20 +42,21 @@ class Website(textual.widget.Widget):
     """Just a list of all visited websites."""
 
     def __init__(self, id_: str, title: str, keywords: list[str],
-                 description: str = "This website does not provide a description.") -> None:
+                 description: str = "This website does not provide a description.",
+                 tld: str = "net") -> None:
         """Initialize the website.
 
         Arguments:
             - id_: the id of the website.
             - title: the title of the website.
-            - domain: the domain of the website. (MAYBE NOT)
             - keywords: the keywords to find the website by.
             - description: the description of the website.
+            - tld: the top level domain of the website (default is net).
         """
         super().__init__(id=id_)
         self.id_: str = id_
         self.title: str = title
-        self.domain: str = f"{self.id_}.web"
+        self.domain: str = f"{self.id_}.{tld}"
         self.description: str = description
         self.keywords: list[str] = keywords
 

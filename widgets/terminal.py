@@ -43,7 +43,7 @@ class Terminal(textual.widget.Widget, can_focus=True):
 
     big_prompt: textual.reactive.reactive[str |
                                           None] = textual.reactive.reactive(None)
-    prompt = textual.reactive.reactive("[blue]└──$[/] ")
+    prompt = textual.reactive.reactive("")
     value = textual.reactive.reactive("", always_update=True)
     cursor_position = textual.reactive.reactive(0)
     cursor_blink = textual.reactive.reactive(True, init=False)
@@ -60,9 +60,10 @@ class Terminal(textual.widget.Widget, can_focus=True):
             """Alias for self.terminal."""
             return self.terminal
 
-    def __init__(self, id_: str | None = None, classes: str | None = None) -> None:
+    def __init__(self, id_: str | None = None, user: str = "sh4d0w",
+                 computer: str = "oracle") -> None:
         """Initialize the terminal."""
-        super().__init__(id=id_, classes=classes)
+        super().__init__(id=id_)
         self._prompt_segments: list[rich.segment.Segment]
         self._input_segments: list[rich.segment.Segment]
         self._blink_timer: textual.timer.Timer
@@ -70,6 +71,7 @@ class Terminal(textual.widget.Widget, can_focus=True):
         self._input: bool = False
         """Used for non-standard input. True supresses the Submitted event."""
         # set correct theme color
+        # FIXME: this is horribly
         color: str = self.app.get_css_variables()["primary"]
         self.big_prompt = f"[{color}]┌([#00FF00]sh4d0w[/]@[#D2691E]" \
             "oracle[/])-([#FF0000]~[/])[/]"

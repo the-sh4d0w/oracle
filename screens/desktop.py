@@ -2,6 +2,8 @@
 
 import textual.app
 import textual.containers
+import textual.css
+import textual.css.query
 import textual.screen
 import textual.widgets
 
@@ -12,7 +14,7 @@ import widgets.terminal
 import widgets.website
 
 # TODO: improve
-# ui things: terminal✔; web browser✔; emails; chat program✔; news!; notes (somewhat)
+# ui things: terminal✔; web browser✔; NetMail; chat program✔; news!; notes (somewhat)
 # websites: search engine; wiki; social media; stock market; gambling
 
 
@@ -24,6 +26,7 @@ class DesktopScreen(textual.screen.Screen):
         super().__init__(id="desktop")
         self.websites: list[widgets.website.Website] \
             = widgets.website.get_websites()
+        self.active_id: str = "web_browser"
 
     def on_mount(self) -> None:
         """Do stuff on mount."""
@@ -35,9 +38,9 @@ class DesktopScreen(textual.screen.Screen):
         with textual.containers.Horizontal():
             with textual.containers.Vertical(id="display"):
                 with textual.containers.Horizontal(id="display_buttons"):
-                    yield textual.widgets.Button("web browser", id="web_browser_button",
+                    yield textual.widgets.Button("NetBrowser", id="web_browser_button",
                                                  classes="display_button display_button_active")
-                    yield textual.widgets.Button("emails", id="emails_button",
+                    yield textual.widgets.Button("NetMail", id="netmail_button",
                                                  classes="display_button")
                     yield textual.widgets.Button("chat", id="chat_button",
                                                  classes="display_button")
@@ -45,15 +48,19 @@ class DesktopScreen(textual.screen.Screen):
                                                  classes="display_button")
                     yield textual.widgets.Button("notes", id="notes_button",
                                                  classes="display_button")
+                    if utils.command.ORACLE._debug:
+                        yield textual.widgets.Button("debug", id="debug_button",
+                                                     classes="display_button")
                 # can't use two ContentSwitcher (directly together?), so this has to do
                 with textual.widgets.ContentSwitcher(initial="search", id="display_inner"):
                     # cursed (like everything else), but it works
                     yield from self.websites
-                    yield textual.widgets.ListView(id="emails")
+                    yield textual.widgets.ListView(id="netmail")
                     yield widgets.chat.ChatWidget(id_="chat")
                     yield textual.widgets.ListView(id="news")
                     yield textual.widgets.TextArea(tab_behavior="indent",
                                                    show_line_numbers=True, id="notes")
+                    yield textual.widgets.Placeholder(id="debug")
             yield widgets.terminal.Terminal(id_="terminal")
 
     @textual.on(textual.widgets.Button.Pressed, ".display_button")
@@ -70,9 +77,25 @@ class DesktopScreen(textual.screen.Screen):
                                     textual.widgets.Button)
         new_button.remove_class("display_button_notification")
         new_button.add_class("display_button_active")
+        # set active id for notifications
+        self.active_id = str(event.button.id).removesuffix("_button")
         # change display
         if event.button.id == "web_browser_button":
             display_inner.current = widgets.website.Website.website
         else:
-            display_inner.current = str(
-                event.button.id).removesuffix("_button")
+            display_inner.current = self.active_id
+
+    def add_notification(self, widget_id: str) -> None:
+        """Add notification to button.
+
+        Arguments:
+            - widget_id: the id of the widget to add a notification for (should be own id).
+        """
+        # FIXME: toasts?
+        try:
+            widget_button = self.query_one(f"#{widget_id}_button",
+                                           textual.widgets.Button)
+            if self.active_id != widget_id:
+                widget_button.add_class("display_button_notification")
+        except textual.css.query.NoMatches:
+            pass

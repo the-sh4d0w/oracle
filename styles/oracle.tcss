@@ -23,7 +23,7 @@
 }
 
 .display_button_notification {
-    color: red;
+    color: orangered !important;
 }
 
 .display_button:focus {

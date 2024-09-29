@@ -3,7 +3,7 @@
 import pathlib
 
 # how?
-
+# -> maybe yaml or something; then a kind of state machine
 
 class Script:
     """Script."""

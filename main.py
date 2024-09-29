@@ -18,6 +18,7 @@ import textual.widget
 import textual.widgets
 
 import utils.command
+import utils.computer
 import utils.themes
 import screens.boot
 import screens.login
@@ -30,13 +31,11 @@ import widgets.website
 # ☐ logging
 # ☐ full docstrings
 # ☐ full type hinting
-# ☐ replace list with set? -> websites or what?
 # 🗹 make list
 
 # make all of this better
-# TODO: and add file system/computers
+# TODO: and add file system/computers!
 # TODO: config/settings?
-# FIXME: terminal probably needs to scroll
 
 
 class OracleApp(textual.app.App):
@@ -49,20 +48,18 @@ class OracleApp(textual.app.App):
                                 "Take a screenshot.", show=False)
     ]
 
-    user = textual.reactive.reactive("user")
-    computer = textual.reactive.reactive("computer")
-    path = textual.reactive.reactive("~")
     do_input = textual.reactive.reactive(False, init=False)
     # need to initialize them here due to __init__ of App calling get_css_variables
     # FIXME: temp theme choice for now
     theme: str | None = "purple"
     themes: dict[str, textual.design.ColorSystem] = utils.themes.get_themes()
 
-    def __init__(self, no_boot: bool = False) -> None:
+    def __init__(self, no_boot: bool = False, debug: bool = False) -> None:
         """Initialize the oracle app.
 
         Arguments:
             - no_boot: skips boot screen if True.
+            - debug: adds debug menu if True.
         """
         super().__init__()
         self._last_prompt: str | None = None
@@ -70,7 +67,20 @@ class OracleApp(textual.app.App):
         self._prompts: list[str] = []
         self._output: list[str] = []
         self._func: typing.Callable[..., str | None]
+        # debug / dev flags
         self._no_boot: bool = no_boot
+        self._debug: bool = debug
+        # network, computer and filesystem stuff
+        self.network: utils.computer.Network = utils.computer.Network()
+        # FIXME: move to computer / remove
+        self.computer = utils.computer.Computer.default(
+            "oracle", "19.136.10.148")
+        self.user = "sh4d0w"
+        self.path = "~"
+        self.network.add_node(self.computer)
+        self.network.add_node(utils.computer.Computer.default(
+            "zer0's Computer", "120.234.54.87"))
+        self.network.add_connection("19.136.10.148", "120.234.54.87")
         # needed so that commands can access OracleApp (e.g. for input)
         utils.command.ORACLE = self
 
@@ -167,12 +177,22 @@ class OracleApp(textual.app.App):
             self._func = func
             self._prompts = prompts
 
+    def add_notification(self, widget_id) -> None:
+        """Add notification to button.
+
+        Arguments:
+            - widget_id: the id of the widget to add a notification for (should be own id).
+        """
+        self.query_one("#desktop",
+                       screens.desktop.DesktopScreen).add_notification(widget_id)
+
 
 @click.command()
 @click.option("-b", "--noboot", is_flag=True, help="Start without bootscreen.")
-def main(noboot: bool = False) -> None:
+@click.option("-d", "--debug", is_flag=True, help="Add a debug menu.")
+def main(noboot: bool = False, debug: bool = False) -> None:
     """The oracle game."""
-    OracleApp(no_boot=noboot).run()
+    OracleApp(no_boot=noboot, debug=debug).run()
 
 
 if __name__ == "__main__":

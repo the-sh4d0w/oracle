@@ -18,7 +18,7 @@ class SearchWebsite(widgets.website.Website):
     def __init__(self) -> None:
         """Initialize the search website."""
         super().__init__(id_="search", title="Search", keywords=["search", "web"],
-                         description="Your favourite web search engine.")
+                         description="Your favourite web search engine.", tld="zer0")
 
     def search(self) -> None:
         """Search the 'web'."""
@@ -57,13 +57,13 @@ class SearchWebsite(widgets.website.Website):
         with textual.widgets.ContentSwitcher(initial="search_main", id="search_switcher"):
             yield textual.widgets.Label("literally anything else")
             with textual.containers.Container(id="search_main"):
-                yield textual.widgets.Label("SEARCH", id="search_main_title")
+                yield textual.widgets.Label("NetSearch", id="search_main_title")
                 with textual.containers.Horizontal(id="search_box"):
                     yield textual.widgets.Input(id="search_main_input", classes="search_input")
                     yield textual.widgets.Button("⌕", id="search_icon")
             with textual.containers.Container(id="search_page"):
                 with textual.containers.Horizontal(id="search_horizontal"):
-                    yield textual.widgets.Button("SEARCH", id="search_page_button")
+                    yield textual.widgets.Button("NetSearch", id="search_page_button")
                     with textual.containers.Horizontal(id="search_box"):
                         yield textual.widgets.Input(id="search_page_input", classes="search_input")
                         yield textual.widgets.Button("⌕", id="search_icon")

@@ -5,10 +5,10 @@ KERNEL supported CPUs:
     BMD resCore
     Cyclops iCore
     Arcon vCore
-mem_pages: [#6495ED]65535[/] pages free, [#6495ED]8193[/] pages reserved, [#6495ED]7[/] pages corrupted
-max_freq: [#6495ED]4.425[/] GHz
-cache_size: [#6495ED]16[/] MB
-max_threads: [#6495ED]4579[/]
+mem_pages: [#6495ED]654535[/] pages free, [#6495ED]81953[/] pages reserved, [#6495ED]74[/] pages corrupted
+max_freq: [#6495ED]14.725[/] GHz
+cache_size: [#6495ED]1024[/] MB
+max_threads: [#6495ED]45079[/]
 
 found cores:
     CyclopsCPU: processor=[#6495ED]1[/] Enabled
@@ -19,18 +19,26 @@ found cores:
     CyclopsCPU: processor=[#6495ED]6[/] Enabled
     CyclopsCPU: processor=[#6495ED]7[/] Enabled
     CyclopsCPU: processor=[#6495ED]8[/] Enabled
+    CyclopsCPU: processor=[#6495ED]9[/] Enabled
+    CyclopsCPU: processor=[#6495ED]10[/] Enabled
+    CyclopsCPU: processor=[#6495ED]11[/] Enabled
+    CyclopsCPU: processor=[#6495ED]12[/] Enabled
+    CyclopsCPU: processor=[#6495ED]13[/] Enabled
+    CyclopsCPU: processor=[#6495ED]14[/] Enabled
+    CyclopsCPU: processor=[#6495ED]15[/] Enabled
+    CyclopsCPU: processor=[#6495ED]16[/] Enabled
 x87/cpu: Supported feature [#20B2AA]'SSX registers'[/]: [#00FF00]True[/]
 x87/cpu: Supported feature [#20B2AA]'AWX registers'[/]: [#00FF00]True[/]
 x87/cpu: Supported feature [#20B2AA]'XPM registers'[/]: [#FF0000]False[/]
 x87/cpu: Supported feature [#20B2AA]'XSAVE 0x010'[/]: [#00FF00]True[/]
 x87/mem: Supported feature [#20B2AA]'SupMem CSR'[/]: [#00FF00]True[/]
 x87/mem: Supported feature [#20B2AA]'floatReg extension'[/]: [#FF0000]False[/]
-sigFrame-max [#6495ED]129345[/]
+sigFrame-max [#6495ED]1729354[/]
 
 Loading security_policies: mem_tagging; sandbox; mpo_quarantine
-Copyright (c) 1979 - 1987
+Copyright (c) 2097 - 2124
 University of New Hampshire. All rights reserved.
-With some modifications by [#FF0000]zer0[/] :)
+Revived in 2136 with some modifications by [#FF0000]zer0[/] :)
 
 sysboot[[#6495ED]1[/]]: reset all filesystems
 sysboot[[#6495ED]1[/]]: mount system@dev-dsk/uuid-34d08-f1e2-a75b

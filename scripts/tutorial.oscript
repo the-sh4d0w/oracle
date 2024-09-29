@@ -1,9 +1,79 @@
 # format? -> JSON & pydantic
 
 needs:
-- notes -> tutorial
-- chat -> tutorial and guidance
-- emails? -> yes, script does everything!
+- notes -> tutorial?; probably not; no!
+- chat -> tutorial and guidance; and story!
+- emails? -> yes, script does everything!? -> no!; script is (mostly) started by email
 - news! -> definitely, show accomplishments
-- web browser? -> no, web does not change!
+- web browser? -> no, web does not change! (additions?; website changes with story? -> news?)
 - what else?
+
+# not yaml
+[0:chat]
+zer0: Hi! :)
+zer0: seems like you got my package and were curios enough to open it
+zer0: curiosity is exactly what we need, you will have to do some detective work
+zer0: you'll get more details later, but first I'd like to test your skills
+zer0: solve a CTF and you're hired
+zer0: I've sent you a NetMail with more details
+
+[1:NetMail]
+from: zer0
+to: {user}
+subject: solve this CTF
+body: you'll have to find a flag that looks like this: $flag_123456, start here: 11.168.188.92
+
+[2:condition:NetMail]
+value: $flag_345819
+-> condition is final???
+-> what do we do after this?
+
+# chat
+{
+    "type": "chat",
+    "content": [
+        {
+            "user": "zer0",
+            "messages": [
+                "Hi! :)",
+                "seems like you got my package and were curios enough to open it",
+                "curiosity is exactly what we need, as you will have to do some detective work",
+                "you'll get more details later, but first I'd like to test your skills",
+                "solve a CTF and you're hired",
+                "I've sent you a NetMail with more details"
+            ]
+        }
+    ]
+}
+
+# NetMail
+{
+    "type": "netmail",
+    "content": {
+        "from": "zer0@site.zer0",
+        "to": "sh4d0w@site.zer0",
+        "subject": "solve this CTF",
+        "body": [
+            "hello {player}"
+            "you will have to find a flag that looks like this: $flag_123456",
+            "start here: 11.168.188.82",
+            "glhf, zer0"
+        ]
+    }
+}
+
+# news
+{
+    "type": "news",
+    "content": {
+        "source": "New Hampshire Truth",
+        "note": "this article has been submitted by the Fizz-Kola© Public Relations Department",
+        "title": "Fizz-Kola© releases new out-of-this-world soda flavour",
+        "body": [
+            "Today the Fizz-Kola© Corporation announced the release of a new flavour for their soda product: Fizz-Kola© Space-Banana!",
+            "It combines the intergalatic flavour of space with the sweet, creamy delight of banana.",
+            "'Space-Banana is not just a flavour, it is an experience,' said Fizz-Kola© Head of Public Relations.",
+            "Try Fizz-Kola© Space-Banana today!"
+        ]
+    }
+}

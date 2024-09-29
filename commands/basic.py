@@ -4,6 +4,7 @@ import click
 
 import screens.desktop
 import utils.command
+import utils.computer
 import widgets.chat
 
 
@@ -49,15 +50,18 @@ def ofetch() -> str:
 @click.command()
 @click.option("-l", is_flag=True)
 @click.option("-a", "--all", is_flag=True)
-def ls(l: bool, all: bool) -> str:
+def ls(l: bool, all: bool) -> str | None:  # pylint:disable=redefined-builtin
     """List files and directories."""
     # TODO: also implement file system
-    files: list[str] = []
-    directories: list[str] = [".", ".."] if all else []
+    contents = utils.command.ORACLE.computer.root_folder.contents
+    if all:
+        temp: list[utils.computer.Folder | utils.computer.File] = [
+            utils.computer.Folder.current(), utils.computer.Folder.parent()]
+        temp.extend(contents)
+        contents = temp
     if l:
-        return "\n".join(directories + directories)
-    else:
-        return "  ".join(directories + directories)
+        return "\n".join(map(str, contents))
+    return "  ".join(map(str, contents))
 
 
 @click.command()
@@ -97,3 +101,12 @@ def chat(amount: int) -> str:
     for i in range(amount):
         chat_widget.write_message("zer0", f"{i} Lorem ipsum, dolor sit amet.")
     return "sent test message"
+
+
+@click.command()
+def scan() -> str | None:
+    """Scan for connected computers."""
+    nodes = utils.command.ORACLE.network.scan()
+    if len(nodes) == 0:
+        return "No connected devices found."
+    return "\n".join([str(node) for node in nodes])

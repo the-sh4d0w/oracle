@@ -13,7 +13,9 @@ import textual.strip
 import textual.timer
 import textual.widget
 
-# FIXME: multiline?
+import main
+
+# FIXME: multiline? -> newline
 
 
 class ChatWidget(textual.widget.Widget):
@@ -26,7 +28,9 @@ class ChatWidget(textual.widget.Widget):
         super().__init__(id=id_)
         self.console: rich.console.Console = rich.console.Console()
         self.user_colors: dict[str, rich.color.Color] = {
-            "zer0": rich.color.Color.from_rgb(255, 0, 0)}
+            "zer0": rich.color.Color.from_rgb(255, 0, 0),
+            "Calvin Robinson": rich.color.Color.from_rgb(0, 124, 0)
+        }
         self.messages: list[tuple[str, str]] = []
         self.message_queue: list[tuple[str, str]] = []
         self.dots_shown: bool = False
@@ -60,6 +64,9 @@ class ChatWidget(textual.widget.Widget):
                 random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         # use list like a FIFO queue
         self.message_queue.insert(0, (user, text))
+        # add notification to chat button
+        self.app: main.OracleApp
+        self.app.add_notification(self.id)
 
     def render_line(self, y: int) -> textual.strip.Strip:
         """Render a line."""
