@@ -68,16 +68,21 @@ def pwd() -> str:
 @click.option("-a", "--all", is_flag=True)
 def ls(l: bool, all: bool) -> str | None:  # pylint:disable=redefined-builtin
     """List files and directories."""
-    return utils.command.ORACLE.network.current_computer().file_system.ls()
-    # TODO: implement better
-    # if all:
-    #     temp: list[utils.computer.Folder | utils.computer.File] = [
-    #         utils.computer.Folder.current(), utils.computer.Folder.parent()]
-    #     temp.extend(contents)
-    #     contents = temp
-    # if l:
-    #     return "\n".join(map(str, contents))
-    # return "  ".join(map(str, contents))
+    # feels a bit cursed
+    directories: list[str] | None
+    files: list[str] | None
+    header: str = "[bold italic]type       size    name[/]\n"
+    output: str = ""
+    directories, files = utils.command.ORACLE.network.current_computer().file_system.ls(l, all)
+    if directories is not None:
+        output += ("\n" if l else " ").join(directories)
+    if files is not None:
+        if output != "":
+            output += ("\n" if l else " ")
+        output += ("\n" if l else " ").join(files)
+    if l and output != "":
+        output = header + output
+    return output if output != "" else None
 
 
 @click.command()

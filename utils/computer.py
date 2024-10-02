@@ -45,7 +45,11 @@ class File:
 
     def __str__(self) -> str:
         """Get string representation of the file."""
-        return self.name
+        match self.filetype:
+            case FileType.EXE:
+                return self.name
+            case FileType.TXT:
+                return f"{self.name}.txt"
 
     def __post_init__(self) -> None:
         """Initialize attributes dependent on other attributes."""
@@ -57,7 +61,7 @@ class File:
         Returns:
             The formatted info.
         """
-        return f"{self.name:15} {self.filetype:10} {self.size:>4} kB"
+        return f"{self.filetype:10} {self.size:>4} kB {self}"
 
     @classmethod
     def text(cls, name: str, content: str) -> "File":
@@ -71,7 +75,7 @@ class File:
             The file.
         """
         # FIXME: generate random content; maybe with seed (filename)
-        return File(f"{name}.txt", None, FileType.TXT, content)
+        return File(name, None, FileType.TXT, content)
 
     @classmethod
     def executable(cls, name: str) -> "File":
@@ -99,6 +103,15 @@ class Directory:
         """Get string representation."""
         return f"{self.name}/"
 
+    def info(self) -> str:
+        """Get info about the file.
+
+        Returns:
+            The formatted info.
+        """
+        return f"directory  ({len(self.children):>2}|{len(self.files):>2}) " \
+            f"[#0000FF]{self.name}[/]"
+
     def add_child(self, child: "Directory | File") -> None:
         """Add a child to the directory."""
         child.parent = self
@@ -121,10 +134,12 @@ class Directory:
     def root(cls) -> "Directory":
         """Create root directory."""
         root = cls("", None, [], [])
-        root.add_child(cls.home())
-        bin_ = cls.bin()
-        bin_.add_child(File.executable("test"))
-        root.add_child(bin_)
+        root.add_child(cls.bin())
+        home = cls.home()
+        home.add_child(File.executable("foo"))
+        home.add_child(File.text("bar", "Lorem ipsum, dolor sit amet."))
+        home.add_child(Directory("test", None, [], []))
+        root.add_child(home)
         return root
 
 
@@ -158,11 +173,12 @@ class FileSystem:
             if child.name == step:
                 return self._walk(child, path)
         # raise error if child doesn't exist
-        raise self.NoSuchDirectoryException()
+        raise self.NoSuchDirectoryException(step)
 
     def pwd(self) -> str:
         """Get current working directory."""
-        path = []
+        # step all the way back to root
+        path: list[Directory] = []
         node: Directory = self.working_directory
         while True:
             path.insert(0, node)
@@ -170,14 +186,54 @@ class FileSystem:
                 node = node.parent
             else:
                 break
-        return "".join(map(str, path))
+        # remove / if not root
+        wd: str = "".join(map(str, path))
+        if wd != "/":
+            wd = wd.removesuffix("/")
+        return wd
 
-    def ls(self) -> str | None:
-        """List content of directory."""
-        if len(self.working_directory.children) == 0 and len(self.working_directory.files) == 0:
-            return None
-        return " ".join(map(str, self.working_directory.children)) + " " \
-            + " ".join(map(str, self.working_directory.files))
+    def ls(self, list_: bool = False, all_: bool = False) \
+            -> tuple[list[str] | None, list[str] | None]:
+        """List content of directory.
+
+        Arguments:
+            - list_: uses list format with info if True.
+            - all: adds . and .. to output if True.
+
+        Returns:
+            A list of directories and a list of files. Can be None if empty.
+        """
+        # yeah, this has become cursed again
+        directories: list[tuple[str, str]] = []
+        files: list[str] = []
+        # add . and .. if all
+        if all_:
+            # info if list
+            if list_:
+                current: Directory = self.working_directory
+                parent: Directory = self.working_directory.parent \
+                    if self.working_directory.parent else self.working_directory
+                directories += [
+                    (".", f"directory  ({len(current.children):>2}|{len(current.files):>2}) "
+                     "[#0000FF].[/]"),
+                    ("..", f"directory  ({len(parent.children):>2}|{len(parent.files):>2}) "
+                     "[#0000FF]..[/]")
+                ]
+            else:
+                directories += [(".", "."), ("..", "..")]
+        # info if list
+        if list_:
+            directories += map(lambda directory: (str(directory), directory.info()),
+                               self.working_directory.children)
+            files += map(lambda file: file.info(),
+                         self.working_directory.files)
+        # name if not list
+        else:
+            directories += map(lambda child: (str(child), f"[#0000FF]{child.name}[/]"),
+                               self.working_directory.children)
+            files += map(str, self.working_directory.files)
+        return list(map(lambda t: t[1], sorted(directories, key=lambda t: t[0]))) \
+            if len(directories) > 0 else None, sorted(files) if len(files) > 0 else None
 
     def cd(self, path: str) -> str | None:
         """Change directory."""
@@ -190,8 +246,9 @@ class FileSystem:
             else:
                 self.working_directory = self._walk(
                     self.working_directory, path_parts)
-        except FileSystem.NoSuchDirectoryException:
-            return "no such directory"
+            return None
+        except FileSystem.NoSuchDirectoryException as excp:
+            return f"No such directory '{excp}'."
 
 
 @dataclasses.dataclass
