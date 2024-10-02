@@ -13,11 +13,16 @@ import widgets
 import widgets.terminal
 
 
-@click.command()
-def help() -> str:  # pylint:disable=redefined-builtin
+@click.command(add_help_option=False)
+@click.argument("command", type=click.STRING, default="")
+def help(command: str) -> str:  # pylint:disable=redefined-builtin
     """Show a list of all commands."""
-    return "\n".join([f"{name:10} {cmd.__doc__}"
-                      for name, cmd in COMMANDS.items()])
+    if command == "":
+        return "\n".join([f"{name:10} {cmd.__doc__}"
+                          for name, cmd in COMMANDS.items()])
+    if command in COMMANDS:
+        return str(COMMANDS[command].get_help(click.Context(COMMANDS[command])))
+    return f"No help exists for '{command}'."
 
 
 def get_commands() -> dict[str, click.Command]:
@@ -28,6 +33,7 @@ def get_commands() -> dict[str, click.Command]:
         importlib.import_module(filename)
         for name, obj in inspect.getmembers(sys.modules[filename]):
             if isinstance(obj, click.Command):
+                obj.add_help_option = False
                 results[name] = obj
     return results
 

@@ -36,6 +36,7 @@ import widgets.website
 # make all of this better
 # TODO: and add file system/computers!
 # TODO: config/settings?
+# FIXME: maybe add some useful methods to wrap calls to other functions
 
 
 class OracleApp(textual.app.App):
@@ -62,6 +63,7 @@ class OracleApp(textual.app.App):
             - debug: adds debug menu if True.
         """
         super().__init__()
+        # terminal stuff
         self._last_prompt: str | None = None
         self._last_big_prompt: str | None = None
         self._prompts: list[str] = []
@@ -71,16 +73,7 @@ class OracleApp(textual.app.App):
         self._no_boot: bool = no_boot
         self._debug: bool = debug
         # network, computer and filesystem stuff
-        self.network: utils.computer.Network = utils.computer.Network()
-        # FIXME: move to computer / remove
-        self.computer = utils.computer.Computer.default(
-            "oracle", "19.136.10.148")
-        self.user = "sh4d0w"
-        self.path = "~"
-        self.network.add_node(self.computer)
-        self.network.add_node(utils.computer.Computer.default(
-            "zer0's Computer", "120.234.54.87"))
-        self.network.add_connection("19.136.10.148", "120.234.54.87")
+        self.network = utils.computer.Network()
         # needed so that commands can access OracleApp (e.g. for input)
         utils.command.ORACLE = self
 

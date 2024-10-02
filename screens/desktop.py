@@ -32,6 +32,7 @@ class DesktopScreen(textual.screen.Screen):
         """Do stuff on mount."""
         utils.command.TERMINAL = self.query_one(
             "#terminal", widgets.terminal.Terminal)
+        utils.command.TERMINAL.focus()
 
     def compose(self) -> textual.app.ComposeResult:
         """Compose the ui."""
@@ -86,7 +87,7 @@ class DesktopScreen(textual.screen.Screen):
             display_inner.current = self.active_id
 
     def add_notification(self, widget_id: str) -> None:
-        """Add notification to button.
+        """Add notification to button and create toast.
 
         Arguments:
             - widget_id: the id of the widget to add a notification for (should be own id).
@@ -95,7 +96,9 @@ class DesktopScreen(textual.screen.Screen):
         try:
             widget_button = self.query_one(f"#{widget_id}_button",
                                            textual.widgets.Button)
-            if self.active_id != widget_id:
+            if "display_button_notification" not in widget_button.classes \
+                    and self.active_id != widget_id:
                 widget_button.add_class("display_button_notification")
+                self.app.notify(f"new {widget_button.label} message")
         except textual.css.query.NoMatches:
             pass

@@ -9,6 +9,7 @@ import textual.screen
 import textual.widgets
 
 import utils.save
+import utils.values
 
 # TODO: errors?
 # TODO: should probably do lowercase usernames
@@ -100,6 +101,8 @@ class LoginScreen(textual.screen.Screen):
         pwd = self.query_one("#login_pwd", textual.widgets.Input)
         if (save := saves.get(user.value)) is not None:
             if save.password == pwd.value:
+                # add correct values to Values
+                utils.values.VALUES.player = user.value
                 user.clear()
                 pwd.clear()
                 user.focus()

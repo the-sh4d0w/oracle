@@ -14,6 +14,9 @@ import textual.strip
 import textual.timer
 import textual.widget
 
+import utils.command
+import utils.values
+
 # TODO: scrolling?
 # TODO: history
 # TODO: ctrl+left and ctrl+right
@@ -60,8 +63,7 @@ class Terminal(textual.widget.Widget, can_focus=True):
             """Alias for self.terminal."""
             return self.terminal
 
-    def __init__(self, id_: str | None = None, user: str = "sh4d0w",
-                 computer: str = "oracle") -> None:
+    def __init__(self, id_: str | None = None) -> None:
         """Initialize the terminal."""
         super().__init__(id=id_)
         self._prompt_segments: list[rich.segment.Segment]
@@ -71,7 +73,7 @@ class Terminal(textual.widget.Widget, can_focus=True):
         self._input: bool = False
         """Used for non-standard input. True supresses the Submitted event."""
         # set correct theme color
-        # FIXME: this is horribly
+        # FIXME: this is horrible
         color: str = self.app.get_css_variables()["primary"]
         self.big_prompt = f"[{color}]┌([#00FF00]sh4d0w[/]@[#D2691E]" \
             "oracle[/])-([#FF0000]~[/])[/]"
@@ -80,7 +82,8 @@ class Terminal(textual.widget.Widget, can_focus=True):
     def watch_prompt(self, prompt: str) -> None:
         """Watch the prompt."""
         self._prompt_segments = list(
-            rich.console.Console().render(prompt))[:-1]
+            rich.console.Console().render(
+                prompt.format_map(utils.values.VALUES.as_dict())))[:-1]
 
     def watch_value(self, value: str) -> None:
         """Watch the value."""
@@ -135,7 +138,8 @@ class Terminal(textual.widget.Widget, can_focus=True):
         """Handle submit action."""
         if self.big_prompt is not None:
             self.write_line(
-                list(rich.console.Console().render(self.big_prompt))[:-1])
+                list(rich.console.Console().render(
+                    self.big_prompt.format_map(utils.values.VALUES.as_dict())))[:-1])
         self.write_line([*self._prompt_segments,
                          rich.segment.Segment(self.value)])
         self.post_message(self.Submitted(self, self.value))
@@ -166,6 +170,11 @@ class Terminal(textual.widget.Widget, can_focus=True):
 
     def render_line(self, y: int) -> textual.strip.Strip:
         """Render a line."""
+        # set values and get prompt for formatting; this is horrible
+        utils.values.VALUES.path = utils.command.ORACLE.network.current_computer().file_system.pwd()
+        # FIXME: this (very obvious in retrospect) breaks all the terminal stuff
+        # self.big_prompt = utils.command.ORACLE.network.current_computer().big_prompt
+        # self.prompt = utils.command.ORACLE.network.current_computer().prompt
         if y == self.size.height - 1:
             result = rich.text.Text(self.value + " ")
             if self.cursor_visible and self.has_focus:
@@ -174,7 +183,8 @@ class Terminal(textual.widget.Widget, can_focus=True):
             self._input_segments = list(result.render(rich.console.Console()))
             return textual.strip.Strip([*self._prompt_segments, *self._input_segments])
         if self.big_prompt is not None and y == self.size.height - 2:
-            return textual.strip.Strip(list(rich.console.Console().render(self.big_prompt))[:-1])
+            return textual.strip.Strip(list(rich.console.Console().render(
+                self.big_prompt.format_map(utils.values.VALUES.as_dict())))[:-1])
         if self.big_prompt is not None and y >= (self.size.height - len(self._lines) - 2):
             return textual.strip.Strip(self._lines[y - self.size.height + 2])
         if y >= (self.size.height - len(self._lines) - 1):

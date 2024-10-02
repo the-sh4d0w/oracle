@@ -38,6 +38,7 @@ class Ports(enum.IntEnum):
 class File:
     """Virtual file."""
     name: str
+    parent: "Directory | None"
     filetype: FileType
     content: str
     size: int = dataclasses.field(init=False)
@@ -70,7 +71,7 @@ class File:
             The file.
         """
         # FIXME: generate random content; maybe with seed (filename)
-        return File(f"{name}.txt", FileType.TXT, content)
+        return File(f"{name}.txt", None, FileType.TXT, content)
 
     @classmethod
     def executable(cls, name: str) -> "File":
@@ -83,64 +84,114 @@ class File:
             The file.
         """
         # FIXME: generate random content
-        return File(name, FileType.EXE, "01010110011101101010010111011100101")
+        return File(name, None, FileType.EXE, "01010110011101101010010111011100101")
 
 
 @dataclasses.dataclass
-class Folder:
-    """Virtual folder."""
+class Directory:
+    """Virtual directory."""
     name: str
-    contents: list["Folder | File"]
+    parent: "Directory | None"
+    children: list["Directory"]
+    files: list["File"]
 
     def __str__(self) -> str:
-        """Get string representation of the folder."""
-        if self.name != "." and self.name != "..":
-            return f"{self.name}/"
-        return self.name
+        """Get string representation."""
+        return f"{self.name}/"
+
+    def add_child(self, child: "Directory | File") -> None:
+        """Add a child to the directory."""
+        child.parent = self
+        if isinstance(child, Directory):
+            self.children.append(child)
+        else:
+            self.files.append(child)
 
     @classmethod
-    def current(cls) -> "Folder":
-        """Create current folder."""
-        return Folder(".", [])
+    def home(cls) -> "Directory":
+        """Create home directory."""
+        return cls("home", None, [], [])
 
     @classmethod
-    def parent(cls) -> "Folder":
-        """Create parent folder."""
-        return Folder("..", [])
+    def bin(cls) -> "Directory":
+        """Create bin directory."""
+        return cls("bin", None, [], [])
 
     @classmethod
-    def home(cls, contents: list["Folder | File"] | None = None) -> "Folder":
-        """Create the home folder.
+    def root(cls) -> "Directory":
+        """Create root directory."""
+        root = cls("", None, [], [])
+        root.add_child(cls.home())
+        bin_ = cls.bin()
+        bin_.add_child(File.executable("test"))
+        root.add_child(bin_)
+        return root
 
-        Arguments:
-            - contents: optional files and folders to add.
 
-        Returns:
-            The folder.
-        """
-        if contents is None:
-            return Folder("home", [])
-        return Folder("home", contents)
+class FileSystem:
+    """Virtual file system."""
 
-    @classmethod
-    def bin(cls, contents: list["Folder | File"] | None = None) -> "Folder":
-        """Create the bin folder.
+    class NoSuchDirectoryException(Exception):
+        """No such directory exception."""
 
-        Arguments:
-            - contents: optional files and folders to add.
+    def __init__(self, root: Directory = Directory.root()) -> None:
+        """Initialize the file system."""
+        self.root: Directory = root
+        self.working_directory: Directory = self.root
 
-        Returns:
-            The folder.
-        """
-        if contents is None:
-            return Folder("bin", [File.executable("test")])
-        return Folder("bin", contents)
+    def _walk(self, start: Directory, path: list[str]) -> Directory:
+        """Walk through a path."""
+        if len(path) == 0:
+            return start
+        step = path.pop(0)
+        # same directory
+        if step == ".":
+            return self._walk(start, path)
+        # parent directory
+        if step == "..":
+            if start.parent is not None:
+                return self._walk(start.parent, path)
+            # start is root
+            return self._walk(start, path)
+        # child directory
+        for child in start.children:
+            if child.name == step:
+                return self._walk(child, path)
+        # raise error if child doesn't exist
+        raise self.NoSuchDirectoryException()
 
-    @classmethod
-    def default_root(cls) -> "Folder":
-        """Create the default folder structure."""
-        # FIXME: __str__ produces // with root
-        return Folder("/", [Folder.home(), Folder.bin()])
+    def pwd(self) -> str:
+        """Get current working directory."""
+        path = []
+        node: Directory = self.working_directory
+        while True:
+            path.insert(0, node)
+            if node.parent is not None:
+                node = node.parent
+            else:
+                break
+        return "".join(map(str, path))
+
+    def ls(self) -> str | None:
+        """List content of directory."""
+        if len(self.working_directory.children) == 0 and len(self.working_directory.files) == 0:
+            return None
+        return " ".join(map(str, self.working_directory.children)) + " " \
+            + " ".join(map(str, self.working_directory.files))
+
+    def cd(self, path: str) -> str | None:
+        """Change directory."""
+        path_parts = path.removesuffix("/").split("/")
+        try:
+            # absolute path
+            if path_parts[0] == "":
+                self.working_directory = self._walk(self.root, path_parts[1:])
+            # relative path
+            else:
+                self.working_directory = self._walk(
+                    self.working_directory, path_parts)
+        except FileSystem.NoSuchDirectoryException:
+            return "no such directory"
 
 
 @dataclasses.dataclass
@@ -148,9 +199,11 @@ class Computer:
     """Virtual computer."""
     name: str
     ip_address: ipaddress.IPv4Address
-    root_folder: Folder
+    file_system: FileSystem
     user: str
-    password: str
+    password: str | None
+    prompt: str
+    big_prompt: str | None
 
     def __str__(self) -> str:
         """Get string representation of the computer."""
@@ -175,8 +228,15 @@ class Computer:
         Returns:
             The computer.
         """
-        return Computer(name, ipaddress.IPv4Address(ip_address), Folder.default_root(),
-                        "admin", "admin")
+        return Computer(name, ipaddress.IPv4Address(ip_address), FileSystem(),
+                        "admin", "admin", "{user}@{name}:{path} ", None)
+
+    @classmethod
+    def oracle(cls) -> "Computer":
+        """Create oracle."""
+        return Computer("oracle", ipaddress.IPv4Address(19391048), FileSystem(),
+                        "sh4d0w", None, "[{primary}]└──$[/] ", "[{primary}]┌([#00FF00]"
+                        "{player}[/]@[#D2691E]oracle[/])-([#FF0000]{path}[/])[/]")
 
 
 class Network:
@@ -185,8 +245,9 @@ class Network:
 
     def __init__(self) -> None:
         """Initialize the network."""
-        # oracle as default home
-        oracle = Computer.default("oracle", 19391048)
+        # oracle as default home -> why????
+        # FIXME: this; maybe access computer directly or atleast make it possible to do so
+        oracle = Computer.oracle()
         self._graph: networkx.Graph = networkx.Graph()
         self._nodes: dict[ipaddress.IPv4Address, Computer] = {}
         self._home: ipaddress.IPv4Address = oracle.ip_address
@@ -201,6 +262,14 @@ class Network:
     @current.setter
     def current(self, new_current: ipaddress.IPv4Address | str | int) -> None:
         self._current = ipaddress.IPv4Address(new_current)
+
+    def current_computer(self) -> Computer:
+        """Get the current computer.
+
+        Returns:
+            The computer.
+        """
+        return self._nodes[self.current]
 
     def add_node(self, node: Computer) -> None:
         """Add a node to the network.
@@ -257,17 +326,3 @@ class Network:
 
 # connected means some sort of direct access is possible (e.g. SSH, Telnet, ...)
 # -> on the system!
-
-
-if __name__ == "__main__":
-    network = Network()
-    network.add_node(Computer.default("Batcomputer", 3789367))
-    network.add_node(Computer.default("Gugle (DNS)", "8.8.8.8"))
-    network.add_node(Computer.default("Gugle Search", "11.57.69.102"))
-    network.add_connection("8.8.8.8", "11.57.69.102")
-    print(network.current)
-    network.connect("8.8.8.8")
-    print(network.current)
-    print(network.scan())
-    network.disconnect()
-    print(network.current)
