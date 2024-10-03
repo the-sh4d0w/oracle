@@ -8,8 +8,6 @@ import textual.design
 
 THEME_PATH = "themes.json"
 
-# TODO: maybe implement custom variables?
-
 
 def get_themes() -> dict[str, textual.design.ColorSystem]:
     """Get all themes.
@@ -24,6 +22,6 @@ def get_themes() -> dict[str, textual.design.ColorSystem]:
         color_name: str = color["name"]
         # don't need the name for the color system
         color.pop("name")
-        # all have to be darkmode (otherwise we get white backgrounds)
+        # all have to be darkmode (otherwise we get a white backgrounds)
         results[color_name] = textual.design.ColorSystem(**color, dark=True)
     return results

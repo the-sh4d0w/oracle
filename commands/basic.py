@@ -5,7 +5,19 @@ import click
 import screens.desktop
 import utils.command
 import utils.computer
-import widgets.chat
+
+
+@click.command(add_help_option=False)
+@click.argument("command", type=click.STRING, default="")
+def help(command: str) -> str:  # pylint:disable=redefined-builtin
+    """Show help for COMMAND or list all commands without COMMAND."""
+    if command == "":
+        return "\n".join([f"{name:10} {cmd.__doc__}"
+                          for name, cmd in sorted(utils.command.ORACLE.commands.items())])
+    if command in utils.command.ORACLE.commands:
+        return str(utils.command.ORACLE.commands[command].get_help(
+            click.Context(utils.command.ORACLE.commands[command])))
+    return f"No help exists for '{command}'."
 
 
 def logout_save() -> None:
@@ -25,7 +37,7 @@ def logout_confirm(answer: str) -> None:
 
 
 @click.command()
-@click.option("-y", "--yes", is_flag=True)
+@click.option("-y", "--yes", is_flag=True, help="Skip confirmation.")
 def logout(yes: bool) -> None:
     """Log out and save data."""
     if yes:
@@ -44,6 +56,7 @@ def clear() -> None:
 @click.command()
 def ofetch() -> str:
     """Display system information."""
+    # FIXME: match information to boot screen
     color: str = utils.command.ORACLE.get_css_variables()["primary"]
     return rf"""
  [{color}]$$$$$$$$$[/]\    [{color}]sh4d0w@oracle[/]
@@ -64,8 +77,8 @@ def pwd() -> str:
 
 
 @click.command()
-@click.option("-l", is_flag=True)
-@click.option("-a", "--all", is_flag=True)
+@click.option("-l", is_flag=True, help="Format as list.")
+@click.option("-a", "--all", is_flag=True, help="Show dot-prefixed files and directories.")
 def ls(l: bool, all: bool) -> str | None:  # pylint:disable=redefined-builtin
     """List files and directories."""
     # feels a bit cursed
@@ -88,7 +101,7 @@ def ls(l: bool, all: bool) -> str | None:  # pylint:disable=redefined-builtin
 @click.command()
 @click.argument("path", type=click.STRING, default="")
 def cd(path: str) -> str | None:
-    """Change directory."""
+    """Change directory to PATH."""
     return utils.command.ORACLE.network.current_computer().file_system.cd(path)
 
 
@@ -108,21 +121,8 @@ def login_verify(user: str, password: str) -> str:
 @click.command()
 def login() -> None:
     """Login to the computer."""
-    # FIXME: returning a string does not work
     # TODO: implement login (computer) functionality
     utils.command.ORACLE.input(login_verify, ["user: ", "pasword: "])
-
-
-@click.command()
-@click.argument("amount", type=click.INT)
-def chat(amount: int) -> str:
-    """Do a chat test."""
-    # FIXME: remove later, currently for testing
-    chat_widget = utils.command.ORACLE.query_one(
-        "#chat", widgets.chat.ChatWidget)
-    for i in range(amount):
-        chat_widget.write_message("zer0", f"{i} Lorem ipsum, dolor sit amet.")
-    return "sent test message"
 
 
 @click.command()

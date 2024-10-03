@@ -11,9 +11,6 @@ import textual.widgets
 import utils.save
 import utils.values
 
-# TODO: errors?
-# TODO: should probably do lowercase usernames
-
 
 class ListUsersScreen(textual.screen.ModalScreen):
     """List users modal screen."""
@@ -60,8 +57,8 @@ class CreateUserScreen(textual.screen.ModalScreen):
         event.stop()
         user = self.query_one("#lcreate_user", textual.widgets.Input)
         pwd = self.query_one("#lcreate_pwd", textual.widgets.Input)
-        username: str = user.value
-        password: str = pwd.value
+        username: str = user.value.lower()
+        password: str = pwd.value.lower()
         # handle all possible errors
         if username == "":
             self.notify("Username can't be empty.", severity="error")
@@ -99,8 +96,8 @@ class LoginScreen(textual.screen.Screen):
         saves: dict[str, utils.save.Save] = utils.save.get_newest_saves()
         user = self.query_one("#login_user", textual.widgets.Input)
         pwd = self.query_one("#login_pwd", textual.widgets.Input)
-        if (save := saves.get(user.value)) is not None:
-            if save.password == pwd.value:
+        if (save := saves.get(user.value.lower())) is not None:
+            if save.password == pwd.value.lower():
                 # add correct values to Values
                 utils.values.VALUES.player = user.value
                 user.clear()

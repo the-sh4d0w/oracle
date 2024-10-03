@@ -13,10 +13,6 @@ import widgets.chat
 import widgets.terminal
 import widgets.website
 
-# TODO: improve
-# ui things: terminal✔; web browser✔; NetMail; chat program✔; news!; notes (somewhat)
-# websites: search engine; wiki; social media; stock market; gambling
-
 
 class DesktopScreen(textual.screen.Screen):
     """Main screen."""
@@ -49,7 +45,7 @@ class DesktopScreen(textual.screen.Screen):
                                                  classes="display_button")
                     yield textual.widgets.Button("notes", id="notes_button",
                                                  classes="display_button")
-                    if utils.command.ORACLE._debug:
+                    if utils.command.ORACLE._debug:  # pylint:disable=protected-access
                         yield textual.widgets.Button("debug", id="debug_button",
                                                      classes="display_button")
                 # can't use two ContentSwitcher (directly together?), so this has to do
@@ -92,7 +88,6 @@ class DesktopScreen(textual.screen.Screen):
         Arguments:
             - widget_id: the id of the widget to add a notification for (should be own id).
         """
-        # FIXME: toasts?
         try:
             widget_button = self.query_one(f"#{widget_id}_button",
                                            textual.widgets.Button)

@@ -34,7 +34,6 @@ import widgets.website
 # 🗹 make list
 
 # make all of this better
-# TODO: and add file system/computers!
 # TODO: config/settings?
 # FIXME: maybe add some useful methods to wrap calls to other functions
 
@@ -75,6 +74,7 @@ class OracleApp(textual.app.App):
         # network, computer and filesystem stuff
         self.network = utils.computer.Network()
         # needed so that commands can access OracleApp (e.g. for input)
+        self.commands = utils.command.get_commands(self._debug)
         utils.command.ORACLE = self
 
     def get_css_variables(self) -> dict[str, str]:
@@ -137,7 +137,7 @@ class OracleApp(textual.app.App):
         else:
             # parse terminal input
             if len(event.value) > 0:
-                output = utils.command.parse(event.value)
+                output = utils.command.parse(self, event.value)
             else:
                 output = None
         # actually call the function if all inputs have been gathered

@@ -3,8 +3,11 @@
 import dataclasses
 import enum
 import ipaddress
+import random
 
 import networkx
+
+# TODO: load and save network from/to JSON -> pydantic?
 
 
 class FileType(enum.StrEnum):
@@ -16,7 +19,8 @@ class FileType(enum.StrEnum):
 class Ports(enum.IntEnum):
     """Registered ports with service names."""
     # not all of these are needed or going to be used
-    # TODO: DHCP?; more DNS; all the ssl versions; some old, funny ports; all of the shell services!
+    # TODO: DHCP?; more DNS; all the ssl versions; some old, funny ports; all of the shell \
+    # services!
     # ports are not going to be accurate to year (2137)
     FTP = 20
     # 21?
@@ -74,7 +78,6 @@ class File:
         Returns:
             The file.
         """
-        # FIXME: generate random content; maybe with seed (filename)
         return File(name, None, FileType.TXT, content)
 
     @classmethod
@@ -87,8 +90,10 @@ class File:
         Returns:
             The file.
         """
-        # FIXME: generate random content
-        return File(name, None, FileType.EXE, "01010110011101101010010111011100101")
+        size: int = len(name) * random.randint(0, 7)
+        content: str = "".join([str(random.randint(0, 1))
+                               for _ in range(size)])
+        return File(name, None, FileType.EXE, content)
 
 
 @dataclasses.dataclass
@@ -303,7 +308,6 @@ class Network:
     def __init__(self) -> None:
         """Initialize the network."""
         # oracle as default home -> why????
-        # FIXME: this; maybe access computer directly or atleast make it possible to do so
         oracle = Computer.oracle()
         self._graph: networkx.Graph = networkx.Graph()
         self._nodes: dict[ipaddress.IPv4Address, Computer] = {}
@@ -375,11 +379,3 @@ class Network:
     def disconnect(self) -> None:
         """Disconnect from a node."""
         self._current = self._home
-
-# TODO: computer needs to be able to stand on its own
-# navigating through the network and computers
-
-# TODO: load and save network from/to JSON -> pydantic?
-
-# connected means some sort of direct access is possible (e.g. SSH, Telnet, ...)
-# -> on the system!

@@ -49,13 +49,12 @@ class SearchWebsite(widgets.website.Website):
             for result in results:
                 search_results.write(result)
         else:
-            search_results.write("No results found :(")
+            search_results.write("No results found :/")
 
     def compose(self) -> textual.app.ComposeResult:
         """Compose the ui."""
         yield self.website_header()
         with textual.widgets.ContentSwitcher(initial="search_main", id="search_switcher"):
-            yield textual.widgets.Label("literally anything else")
             with textual.containers.Container(id="search_main"):
                 yield textual.widgets.Label("NetSearch", id="search_main_title")
                 with textual.containers.Horizontal(id="search_box"):

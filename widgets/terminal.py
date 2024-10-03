@@ -20,7 +20,7 @@ import utils.values
 # TODO: scrolling?
 # TODO: history
 # TODO: ctrl+left and ctrl+right
-# FIXME: remove not needed stuff
+# FIXME: remove not needed stuff; mostly variables
 
 
 class Terminal(textual.widget.Widget, can_focus=True):
