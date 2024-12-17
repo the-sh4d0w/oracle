@@ -20,7 +20,6 @@ import textual.widgets
 import screens.boot
 import screens.login
 import screens.desktop
-import utils.command
 import utils.computer
 import utils.themes
 import utils.values
@@ -43,12 +42,8 @@ class OracleApp(textual.app.App):
     """Oracle app."""
     if not utils.values.GAME_VALUES.debug:
         ENABLE_COMMAND_PALETTE = False
-    # load all styles from /styles
+    # load all styles from styles/
     CSS_PATH = list(pathlib.Path("styles").iterdir())
-    BINDINGS = [
-        textual.binding.Binding("f2", "screenshot",
-                                "Take a screenshot.", show=False)
-    ]
 
     def __init__(self, no_boot: bool = False) -> None:
         """Initialize the oracle app.

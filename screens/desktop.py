@@ -27,6 +27,8 @@ class DesktopScreen(textual.screen.Screen):
 
     def on_mount(self) -> None:
         """Do stuff on mount."""
+        # FIXME: whyyyyy?
+        utils.command.COMMANDS = utils.command.get_commands()
         widgets.terminal.Terminal.TERMINAL.focus()
 
     def compose(self) -> textual.app.ComposeResult:

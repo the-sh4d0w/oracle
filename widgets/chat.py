@@ -29,7 +29,7 @@ class ChatWidget(textual.widget.Widget):
         self.console: rich.console.Console = rich.console.Console()
         self.user_colors: dict[str, rich.color.Color] = {
             "zer0": rich.color.Color.from_rgb(255, 0, 0),
-            "Calvin Robinson": rich.color.Color.from_rgb(0, 124, 0)
+            "CR": rich.color.Color.from_rgb(0, 124, 0)
         }
         self.messages: list[tuple[str, str]] = []
         self.message_queue: list[tuple[str, str]] = []
@@ -47,8 +47,9 @@ class ChatWidget(textual.widget.Widget):
         typing.cast(textual.timer.Timer, self.dot_timer).stop()
         self.dots_shown = False
 
-    def _on_mount(self, _: textual.events.Mount) -> None:
+    def _on_mount(self, event: textual.events.Mount) -> None:
         """Do stuff on mount."""
+        event.stop()
         self.auto_refresh = 1 / 16
 
     def write_message(self, user: str, text: str) -> None:

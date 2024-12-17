@@ -3,7 +3,6 @@
 import pathlib
 import random
 import time
-import typing
 
 import textual.app
 import textual.containers
@@ -21,7 +20,7 @@ class BootScreen(textual.screen.Screen):
         with pathlib.Path("boot.txt").open("r", encoding="utf-8") as file:
             self.lines: list[str] = file.read().split("\n")
         self.index: int = 0
-        self.timer: textual.timer.Timer | None = None
+        self.timer: textual.timer.Timer
 
     def next(self) -> None:
         """Add lines of text."""
@@ -34,7 +33,7 @@ class BootScreen(textual.screen.Screen):
             self.index += 1
         else:
             time.sleep(3)
-            typing.cast(textual.timer.Timer, self.timer).stop()
+            self.timer.stop()
             self.app.pop_screen()
 
     def on_mount(self) -> None:
