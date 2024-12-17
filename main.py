@@ -17,12 +17,12 @@ import textual.timer
 import textual.widget
 import textual.widgets
 
-import utils.command
-import utils.computer
-import utils.themes
 import screens.boot
 import screens.login
 import screens.desktop
+import utils.command
+import utils.computer
+import utils.themes
 import utils.values
 import widgets.chat
 import widgets.terminal
@@ -41,18 +41,14 @@ import widgets.website
 
 class OracleApp(textual.app.App):
     """Oracle app."""
-    ENABLE_COMMAND_PALETTE = False
+    if not utils.values.GAME_VALUES.debug:
+        ENABLE_COMMAND_PALETTE = False
     # load all styles from /styles
     CSS_PATH = list(pathlib.Path("styles").iterdir())
     BINDINGS = [
         textual.binding.Binding("f2", "screenshot",
                                 "Take a screenshot.", show=False)
     ]
-
-    # need to initialize them here due to __init__ of App calling get_css_variables
-    # FIXME: temp theme choice for now
-    theme: str | None = "purple"
-    themes: dict[str, textual.design.ColorSystem] = utils.themes.get_themes()
 
     def __init__(self, no_boot: bool = False) -> None:
         """Initialize the oracle app.

@@ -30,7 +30,7 @@
 }
 
 .search_input {
-    background: $surface;
+    background: transparent;
     width: 30vw;
     height: auto;
     border: none;
@@ -39,13 +39,14 @@
 }
 
 #search_icon {
-    background: $surface;
+    background: transparent;
     border: none;
     color: blue;
     min-width: 1;
 }
 
 #search_results {
+    background: transparent;
     margin: 1;
 }
 

@@ -290,14 +290,14 @@ class Computer:
             The computer.
         """
         return Computer(name, ipaddress.IPv4Address(ip_address), FileSystem(),
-                        "admin", "{user}@{name}:{path} $ ", [])
+                        "admin", "[green]{user}@{name}:{path} $[/] ", [])
 
     @classmethod
     def oracle(cls) -> "Computer":
         """Create oracle."""
         return Computer("oracle", ipaddress.IPv4Address(19391048), FileSystem(),
-                        "sh4d0w", "[blue]┌([#00FF00]{player}[/]@[#D2691E]"
-                        "oracle[/])-([#FF0000]{path}[/])[/]\n[blue]└──$[/] ", [])
+                        "sh4d0w", "[{primary}]┌([#00FF00]{player}[/]@[#D2691E]"
+                        "oracle[/])-([#FF0000]{path}[/])[/]\n[{primary}]└──$[/] ", [])
 
 
 class Network:

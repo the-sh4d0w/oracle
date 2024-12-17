@@ -3,6 +3,7 @@
 import dataclasses
 
 import utils.computer
+import widgets.terminal
 
 
 @dataclasses.dataclass
@@ -26,9 +27,10 @@ class TextValues:
         self.path = utils.computer.NETWORK.computer.file_system.pwd()
 
     def as_dict(self) -> dict[str, str | None]:
-        """Get values as dict. Also updates values."""
+        """Get values and theme colours as dict. Also updates values."""
         self.update()
-        return self.__dict__
+        # cursed
+        return {**self.__dict__, **widgets.terminal.Terminal.TERMINAL.app.get_css_variables()}
 
 
 GAME_VALUES = GameValues()

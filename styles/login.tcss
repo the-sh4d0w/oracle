@@ -14,14 +14,14 @@
 }
 
 #login_user {
-    background: $surface;
+    background: transparent;
     border: round $primary;
     padding: 0 1;
     width: 35vw;
 }
 
 #login_pwd {
-    background: $surface;
+    background: transparent;
     border: round $primary;
     padding: 0 1;
     width: 35vw;
@@ -83,14 +83,14 @@ CreateUserScreen {
 }
 
 #lcreate_user {
-    background: $background;
+    background: transparent;
     border: round green;
     padding: 0 1;
     width: 35vw;
 }
 
 #lcreate_pwd {
-    background: $background;
+    background: transparent;
     border: round green;
     padding: 0 1;
     width: 35vw;

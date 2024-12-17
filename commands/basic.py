@@ -6,6 +6,7 @@ import click
 
 import utils.command
 import utils.computer
+import utils.values
 import widgets.terminal
 
 
@@ -55,17 +56,16 @@ def clear() -> None:
 def ofetch() -> str:
     """Display system information."""
     # FIXME: match information to boot screen
-    color: str = "purple"
-    return rf"""
- [{color}]$$$$$$$$$[/]\    [{color}]sh4d0w@oracle[/]
- [{color}]$$[/]  ___[{color}]$$[/] |   -------------
- [{color}]$$[/] |   [{color}]$$[/] |   [{color}]OS[/]: oracleOS v1.17
- [{color}]$$[/] |   [{color}]$$[/] |   [{color}]Kernel[/]: 0.15.8.34
- [{color}]$$[/] |   [{color}]$$[/] |   [{color}]Uptime[/]: calculate this
- [{color}]$$[/] |   [{color}]$$[/] |   [{color}]Shell[/]: bosh 5.1.4
- [{color}]$$$$$$$$$[/] |   [{color}]CPU[/]: Cyclops i803 (8) @ 1.799GHz
- \_________|   [{color}]Memory[/]: 198MiB / 7812MiB
-"""
+    return r"""
+ [{primary}]$$$$$$$$$[/]\    [{primary}]{user}@{name}[/]
+ [{primary}]$$[/]  ___[{primary}]$$[/] |   -------------
+ [{primary}]$$[/] |   [{primary}]$$[/] |   [{primary}]OS[/]: oracleOS v1.17
+ [{primary}]$$[/] |   [{primary}]$$[/] |   [{primary}]Kernel[/]: v0.15.8.34
+ [{primary}]$$[/] |   [{primary}]$$[/] |   [{primary}]Uptime[/]: calculate this
+ [{primary}]$$[/] |   [{primary}]$$[/] |   [{primary}]Shell[/]: bosh 5.1.4
+ [{primary}]$$$$$$$$$[/] |   [{primary}]CPU[/]: Cyclops i803 (8) @ 1.799GHz
+ \_________|   [{primary}]Memory[/]: 198MiB / 7812MiB
+""".format_map(utils.values.VALUES.as_dict())
 
 
 @click.command()
