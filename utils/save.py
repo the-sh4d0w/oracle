@@ -20,7 +20,7 @@ class Save(pydantic.BaseModel):
     @property
     def filename(self) -> str:
         """Filename of the save."""
-        return f"{self.username}_{datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')}.osave"
+        return f"{self.username}_{datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')}.json"
 
     def save(self) -> None:
         """Save the save as a file."""

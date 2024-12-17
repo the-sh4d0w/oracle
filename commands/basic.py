@@ -1,32 +1,30 @@
 """Basic commands."""
 
+import ipaddress
+
 import click
 
-import screens.desktop
 import utils.command
 import utils.computer
+import widgets.terminal
 
 
 @click.command(add_help_option=False)
 @click.argument("command", type=click.STRING, default="")
 def help(command: str) -> str:  # pylint:disable=redefined-builtin
-    """Show help for COMMAND or list all commands without COMMAND."""
+    """Show help for COMMAND or list all commands without COMMAND parameter."""
     if command == "":
         return "\n".join([f"{name:10} {cmd.__doc__}"
-                          for name, cmd in sorted(utils.command.ORACLE.commands.items())])
-    if command in utils.command.ORACLE.commands:
-        return str(utils.command.ORACLE.commands[command].get_help(
-            click.Context(utils.command.ORACLE.commands[command])))
+                          for name, cmd in sorted(utils.command.COMMANDS.items())])
+    if command in utils.command.COMMANDS:
+        return str(utils.command.COMMANDS[command].get_help(
+            click.Context(utils.command.COMMANDS[command])))
     return f"No help exists for '{command}'."
 
 
 def logout_save() -> None:
     """Do the logout and save data."""
-    utils.command.TERMINAL.app.pop_screen()
-    # reinstall to reset
-    utils.command.TERMINAL.app.uninstall_screen("desktop")
-    utils.command.TERMINAL.app.install_screen(
-        screens.desktop.DesktopScreen(), "desktop")
+    widgets.terminal.Terminal.TERMINAL.app.pop_screen()
     # TODO: save data
 
 
@@ -43,21 +41,21 @@ def logout(yes: bool) -> None:
     if yes:
         logout_save()
     else:
-        utils.command.ORACLE.input(
-            logout_confirm, ["Do you want to log out? (y/N) "])
+        widgets.terminal.Terminal.TERMINAL.input(
+            logout_confirm, "Do you want to log out? (y/N) ")
 
 
 @click.command()
 def clear() -> None:
     """Clear the terminal."""
-    utils.command.TERMINAL.clear()
+    widgets.terminal.Terminal.TERMINAL.clear()
 
 
 @click.command()
 def ofetch() -> str:
     """Display system information."""
     # FIXME: match information to boot screen
-    color: str = utils.command.ORACLE.get_css_variables()["primary"]
+    color: str = "purple"
     return rf"""
  [{color}]$$$$$$$$$[/]\    [{color}]sh4d0w@oracle[/]
  [{color}]$$[/]  ___[{color}]$$[/] |   -------------
@@ -73,7 +71,7 @@ def ofetch() -> str:
 @click.command()
 def pwd() -> str:
     """Print working directory."""
-    return utils.command.ORACLE.network.current_computer().file_system.pwd()
+    return utils.computer.NETWORK.file_system.pwd()
 
 
 @click.command()
@@ -81,12 +79,13 @@ def pwd() -> str:
 @click.option("-a", "--all", is_flag=True, help="Show dot-prefixed files and directories.")
 def ls(l: bool, all: bool) -> str | None:  # pylint:disable=redefined-builtin
     """List files and directories."""
+    # TODO: add option to list specific folder
     # feels a bit cursed
     directories: list[str] | None
     files: list[str] | None
     header: str = "[bold italic]type       size    name[/]\n"
     output: str = ""
-    directories, files = utils.command.ORACLE.network.current_computer().file_system.ls(l, all)
+    directories, files = utils.computer.NETWORK.file_system.ls(l, all)
     if directories is not None:
         output += ("\n" if l else " ").join(directories)
     if files is not None:
@@ -102,13 +101,7 @@ def ls(l: bool, all: bool) -> str | None:  # pylint:disable=redefined-builtin
 @click.argument("path", type=click.STRING, default="")
 def cd(path: str) -> str | None:
     """Change directory to PATH."""
-    return utils.command.ORACLE.network.current_computer().file_system.cd(path)
-
-
-@click.command()
-def exit() -> None:  # pylint:disable=redefined-builtin
-    """Exit the current computer."""
-    # TODO: implement actual computers
+    return utils.computer.NETWORK.file_system.cd(path)
 
 
 def login_verify(user: str, password: str) -> str:
@@ -122,13 +115,29 @@ def login_verify(user: str, password: str) -> str:
 def login() -> None:
     """Login to the computer."""
     # TODO: implement login (computer) functionality
-    utils.command.ORACLE.input(login_verify, ["user: ", "pasword: "])
+    widgets.terminal.Terminal.TERMINAL.input(
+        login_verify, "user: ", "pasword: ")
 
 
 @click.command()
 def scan() -> str | None:
     """Scan for connected computers."""
-    nodes = utils.command.ORACLE.network.scan()
+    nodes = utils.computer.NETWORK.scan()
     if len(nodes) == 0:
         return "No connected devices found."
     return "\n".join([str(node) for node in nodes])
+
+
+@click.command()
+@click.argument("ip_address", type=click.STRING)
+def connect(ip_address: str) -> str | None:
+    """Connect to the computer with the IP_ADDRESS."""
+    if not utils.computer.NETWORK.connect(ipaddress.IPv4Address(ip_address)):
+        return "Could not connect."
+    return None
+
+
+@click.command()
+def exit() -> None:  # pylint:disable=redefined-builtin
+    """Exit the current computer."""
+    utils.computer.NETWORK.disconnect()

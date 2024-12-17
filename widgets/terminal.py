@@ -1,6 +1,7 @@
 """Custom terminal widget."""
 
 import dataclasses
+import typing
 
 import rich.console
 import rich.segment
@@ -15,12 +16,12 @@ import textual.timer
 import textual.widget
 
 import utils.command
+import utils.computer
 import utils.values
 
 # TODO: scrolling?
 # TODO: history
 # TODO: ctrl+left and ctrl+right
-# FIXME: remove not needed stuff; mostly variables
 
 
 class Terminal(textual.widget.Widget, can_focus=True):
@@ -44,13 +45,12 @@ class Terminal(textual.widget.Widget, can_focus=True):
                                 "delete right", show=False)
     ]
 
-    big_prompt: textual.reactive.reactive[str |
-                                          None] = textual.reactive.reactive(None)
-    prompt = textual.reactive.reactive("")
+    prompts = textual.reactive.reactive([])
     value = textual.reactive.reactive("", always_update=True)
     cursor_position = textual.reactive.reactive(0)
     cursor_blink = textual.reactive.reactive(True, init=False)
     cursor_visible = textual.reactive.reactive(True)
+    TERMINAL: "Terminal"
 
     @dataclasses.dataclass
     class Submitted(textual.message.Message):
@@ -66,24 +66,16 @@ class Terminal(textual.widget.Widget, can_focus=True):
     def __init__(self, id_: str | None = None) -> None:
         """Initialize the terminal."""
         super().__init__(id=id_)
-        self._prompt_segments: list[rich.segment.Segment]
-        self._input_segments: list[rich.segment.Segment]
         self._blink_timer: textual.timer.Timer
         self._lines: list[list[rich.segment.Segment]] = []
-        self._input: bool = False
-        """Used for non-standard input. True supresses the Submitted event."""
-        # set correct theme color
-        # FIXME: this is horrible
-        color: str = self.app.get_css_variables()["primary"]
-        self.big_prompt = f"[{color}]┌([#00FF00]sh4d0w[/]@[#D2691E]" \
-            "oracle[/])-([#FF0000]~[/])[/]"
-        self.prompt = f"[{color}]└──$[/] "
-
-    def watch_prompt(self, prompt: str) -> None:
-        """Watch the prompt."""
-        self._prompt_segments = list(
-            rich.console.Console().render(
-                prompt.format_map(utils.values.VALUES.as_dict())))[:-1]
+        # variable for command input handling
+        self._input_prompts: list[str] = []
+        self._outputs: list[str] = []
+        self._callback: typing.Callable[[str], None | str] | None = None
+        # reference to self for commands
+        Terminal.TERMINAL = self
+        # add first prompt
+        self.write_lines(utils.computer.NETWORK.computer.prompt)
 
     def watch_value(self, value: str) -> None:
         """Watch the value."""
@@ -99,12 +91,23 @@ class Terminal(textual.widget.Widget, can_focus=True):
         elif cursor_position >= len(self.value):
             self.cursor_position = len(self.value)
 
-    def write_line(self, line: str | list[rich.segment.Segment]) -> None:
-        """Write a line."""
-        if isinstance(line, str):
-            self._lines.append(list(rich.console.Console().render(line))[:-1])
-        elif isinstance(line, list):
+    def write_lines(self, lines: str) -> None:
+        """Write lines."""
+        for line in lines.split("\n"):
+            line = line.format_map(utils.values.VALUES.as_dict())
+            line = list(rich.console.Console().render(line))[:-1]
             self._lines.append(line)
+
+    def input(self, callback: typing.Callable[..., None | str], *prompts: str) -> None:
+        """Do input."""
+        input_prompts: list[str] = list(prompts)
+        self.write_lines(input_prompts.pop(0))
+        self._input_prompts = input_prompts
+        self._callback = callback
+
+    def clear(self):
+        """Clear the terminal."""
+        self._lines = []
 
     async def _on_key(self, event: textual.events.Key) -> None:
         if self.cursor_blink:
@@ -121,7 +124,9 @@ class Terminal(textual.widget.Widget, can_focus=True):
                 self.cursor_position += 1
             event.prevent_default()
 
-    def _on_focus(self, _: textual.events.Focus) -> None:
+    def _on_focus(self, event: textual.events.Focus) -> None:
+        """Do stuff on focus."""
+        event.stop()
         self.cursor_position = len(self.value)
         if self.cursor_blink:
             self._blink_timer.resume()
@@ -136,12 +141,6 @@ class Terminal(textual.widget.Widget, can_focus=True):
 
     def action_submit(self) -> None:
         """Handle submit action."""
-        if self.big_prompt is not None:
-            self.write_line(
-                list(rich.console.Console().render(
-                    self.big_prompt.format_map(utils.values.VALUES.as_dict())))[:-1])
-        self.write_line([*self._prompt_segments,
-                         rich.segment.Segment(self.value)])
         self.post_message(self.Submitted(self, self.value))
         self.value = ""
 
@@ -163,34 +162,45 @@ class Terminal(textual.widget.Widget, can_focus=True):
         """Toggle visibility of cursor."""
         self.cursor_visible = not self.cursor_visible
 
-    def _on_mount(self) -> None:  # pylint:disable=arguments-differ
+    def _on_mount(self, event: textual.events.Mount) -> None:
         """Do stuff on mount."""
-        self._blink_timer = self.set_interval(0.5, self.toggle_cursor,
-                                              pause=not (self.cursor_blink and self.has_focus))
+        event.stop()
+        self._blink_timer = self.set_interval(
+            0.5, self.toggle_cursor, pause=not (self.cursor_blink and self.has_focus))
 
     def render_line(self, y: int) -> textual.strip.Strip:
         """Render a line."""
-        # set values and get prompt for formatting; this is horrible
-        utils.values.VALUES.path = utils.command.ORACLE.network.current_computer().file_system.pwd()
-        # FIXME: this (very obvious in retrospect) breaks all the terminal stuff
-        # self.big_prompt = utils.command.ORACLE.network.current_computer().big_prompt
-        # self.prompt = utils.command.ORACLE.network.current_computer().prompt
+        console = rich.console.Console()
         if y == self.size.height - 1:
-            result = rich.text.Text(self.value + " ")
+            value = rich.text.Text(self.value + " ")
             if self.cursor_visible and self.has_focus:
-                result.stylize(rich.style.Style(color="white", bgcolor="black", reverse=True),
-                               self.cursor_position, self.cursor_position + 1)
-            self._input_segments = list(result.render(rich.console.Console()))
-            return textual.strip.Strip([*self._prompt_segments, *self._input_segments])
-        if self.big_prompt is not None and y == self.size.height - 2:
-            return textual.strip.Strip(list(rich.console.Console().render(
-                self.big_prompt.format_map(utils.values.VALUES.as_dict())))[:-1])
-        if self.big_prompt is not None and y >= (self.size.height - len(self._lines) - 2):
-            return textual.strip.Strip(self._lines[y - self.size.height + 2])
-        if y >= (self.size.height - len(self._lines) - 1):
-            return textual.strip.Strip(self._lines[y - self.size.height + 1])
+                value.stylize(rich.style.Style(color="white", bgcolor="black", reverse=True),
+                              self.cursor_position, self.cursor_position + 1)
+            input_segments = list(value.render(console))
+            if len(self._lines) > 0:
+                return textual.strip.Strip([*self._lines[-1], *input_segments])
+            return textual.strip.Strip(input_segments)
+        if y >= (self.size.height - len(self._lines)):
+            return textual.strip.Strip(self._lines[y - self.size.height])
         return textual.strip.Strip.blank(self.size.width)
 
-    def clear(self):
-        """Clear the terminal."""
-        self._lines = []
+    def on_terminal_submitted(self, event: Submitted) -> None:
+        """Handle terminal submit event."""
+        # still a bit curse, but it could be so much worse
+        event.stop()
+        self._lines[-1] += [*rich.text.Text(event.value
+                                            ).render(rich.console.Console())]
+        if self._callback:
+            self._outputs.append(event.value)
+            if len(self._input_prompts) == 0:
+                if (output := self._callback(*self._outputs)):
+                    self.write_lines(output)
+                self._outputs = []
+                self._callback = None
+            else:
+                self.write_lines(self._input_prompts.pop(0))
+        elif event.value:
+            if (output := utils.command.parse(event.value)):
+                self.write_lines(output)
+        if not self._callback:
+            self.write_lines(utils.computer.NETWORK.computer.prompt)

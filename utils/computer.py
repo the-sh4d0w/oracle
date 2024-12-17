@@ -263,9 +263,8 @@ class Computer:
     ip_address: ipaddress.IPv4Address
     file_system: FileSystem
     user: str
-    password: str | None
     prompt: str
-    big_prompt: str | None
+    ports: list[Ports]
 
     def __str__(self) -> str:
         """Get string representation of the computer."""
@@ -291,46 +290,43 @@ class Computer:
             The computer.
         """
         return Computer(name, ipaddress.IPv4Address(ip_address), FileSystem(),
-                        "admin", "admin", "{user}@{name}:{path} ", None)
+                        "admin", "{user}@{name}:{path} $ ", [])
 
     @classmethod
     def oracle(cls) -> "Computer":
         """Create oracle."""
         return Computer("oracle", ipaddress.IPv4Address(19391048), FileSystem(),
-                        "sh4d0w", None, "[{primary}]└──$[/] ", "[{primary}]┌([#00FF00]"
-                        "{player}[/]@[#D2691E]oracle[/])-([#FF0000]{path}[/])[/]")
+                        "sh4d0w", "[blue]┌([#00FF00]{player}[/]@[#D2691E]"
+                        "oracle[/])-([#FF0000]{path}[/])[/]\n[blue]└──$[/] ", [])
 
 
 class Network:
     """Virtual network."""
-    # functions mimic terminal commands
+    # oracle has a network, so everything should be directly accessible here
 
     def __init__(self) -> None:
         """Initialize the network."""
-        # oracle as default home -> why????
+        # oracle as default home -> FIXME: maybe load from file
         oracle = Computer.oracle()
         self._graph: networkx.Graph = networkx.Graph()
         self._nodes: dict[ipaddress.IPv4Address, Computer] = {}
         self._home: ipaddress.IPv4Address = oracle.ip_address
         self._current: ipaddress.IPv4Address = self._home
         self.add_node(oracle)
+        # FIXME: remove later; for test purposes only
+        zer0 = Computer.default("zer0's Computer", 12345)
+        self.add_node(zer0)
+        self.add_connection(oracle.ip_address, zer0.ip_address)
 
     @property
-    def current(self) -> ipaddress.IPv4Address:
-        """The node currently connected."""
-        return self._current
+    def computer(self) -> Computer:
+        """Get the current computer."""
+        return self._nodes[self._current]
 
-    @current.setter
-    def current(self, new_current: ipaddress.IPv4Address | str | int) -> None:
-        self._current = ipaddress.IPv4Address(new_current)
-
-    def current_computer(self) -> Computer:
-        """Get the current computer.
-
-        Returns:
-            The computer.
-        """
-        return self._nodes[self.current]
+    @property
+    def file_system(self) -> FileSystem:
+        """Get the current computer's filesystem."""
+        return self.computer.file_system
 
     def add_node(self, node: Computer) -> None:
         """Add a node to the network.
@@ -379,3 +375,17 @@ class Network:
     def disconnect(self) -> None:
         """Disconnect from a node."""
         self._current = self._home
+
+    @classmethod
+    def _load(cls) -> "Network":
+        """Load network from (save?) file."""
+        return Network()
+
+    @classmethod
+    def _store(cls) -> None:
+        """Store network in (save?) file."""
+
+
+# TODO: load?; technically everything should go into the save file, but the network is not \
+# player dependent
+NETWORK = Network()

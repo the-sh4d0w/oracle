@@ -9,6 +9,7 @@ import textual.widgets
 
 import utils
 import utils.command
+import utils.values
 import widgets.chat
 import widgets.terminal
 import widgets.website
@@ -26,9 +27,7 @@ class DesktopScreen(textual.screen.Screen):
 
     def on_mount(self) -> None:
         """Do stuff on mount."""
-        utils.command.TERMINAL = self.query_one(
-            "#terminal", widgets.terminal.Terminal)
-        utils.command.TERMINAL.focus()
+        widgets.terminal.Terminal.TERMINAL.focus()
 
     def compose(self) -> textual.app.ComposeResult:
         """Compose the ui."""
@@ -45,7 +44,7 @@ class DesktopScreen(textual.screen.Screen):
                                                  classes="display_button")
                     yield textual.widgets.Button("notes", id="notes_button",
                                                  classes="display_button")
-                    if utils.command.ORACLE._debug:  # pylint:disable=protected-access
+                    if utils.values.GAME_VALUES.debug:  # pylint:disable=protected-access
                         yield textual.widgets.Button("debug", id="debug_button",
                                                      classes="display_button")
                 # can't use two ContentSwitcher (directly together?), so this has to do

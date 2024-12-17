@@ -8,6 +8,7 @@ import textual.reactive
 import textual.screen
 import textual.widgets
 
+import screens.desktop
 import utils.save
 import utils.values
 
@@ -142,14 +143,14 @@ class LoginScreen(textual.screen.Screen):
         """Handle input submitted event."""
         event.stop()
         if self.login():
-            self.app.push_screen("desktop")
+            self.app.push_screen(screens.desktop.DesktopScreen())
 
     @textual.on(textual.widgets.Button.Pressed, "#login_button")
     def login_button_pressed(self, event: textual.widgets.Button.Pressed) -> None:
         """Handle on button pressed for the login_button."""
         event.stop()
         if self.login():
-            self.app.push_screen("desktop")
+            self.app.push_screen(screens.desktop.DesktopScreen())
 
     @textual.on(textual.widgets.Button.Pressed, "#login_list")
     def login_list_pressed(self, event: textual.widgets.Button.Pressed) -> None:
