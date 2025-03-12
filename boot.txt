@@ -4,7 +4,7 @@ KERNEL supported CPUs:
     Outel core
     BMD resCore
     Cyclops iCore
-    Arcon vCore
+    Acron vCore
 mem_pages: [#6495ED]654535[/] pages free, [#6495ED]81953[/] pages reserved, [#6495ED]74[/] pages corrupted
 max_freq: [#6495ED]14.725[/] GHz
 cache_size: [#6495ED]1024[/] MB

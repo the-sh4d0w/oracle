@@ -1,0 +1,16 @@
+{
+    "home": "192.168.188.1",
+    "dns": {
+        "search.zer0": "1.1.1.1",
+        "site.zer0": "2.2.2.2"
+    },
+    "devices": {
+        "1.1.1.1": {
+            "name": "zer0's Server",
+            "type": "Is this a thing?"
+        },
+        "2.2.2.2": {
+            "name": "zer0's Computer"
+        }
+    }
+}
