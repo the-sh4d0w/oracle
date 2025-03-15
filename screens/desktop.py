@@ -11,6 +11,7 @@ import utils
 import utils.command
 import utils.values
 import widgets.chat
+import widgets.debug
 import widgets.terminal
 import widgets.website
 
@@ -58,7 +59,7 @@ class DesktopScreen(textual.screen.Screen):
                     yield textual.widgets.ListView(id="news")
                     yield textual.widgets.TextArea(tab_behavior="indent",
                                                    show_line_numbers=True, id="notes")
-                    yield textual.widgets.Placeholder(id="debug")
+                    yield widgets.debug.DebugWidget(id_="debug")
             yield widgets.terminal.Terminal(id_="terminal")
 
     @textual.on(textual.widgets.Button.Pressed, ".display_button")

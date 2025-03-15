@@ -37,6 +37,9 @@ import widgets.website
 # TODO: config/settings?
 # FIXME: maybe add some useful methods to wrap calls to other functions
 
+__VERSION__ = 0, 2, 0
+"""Game version as Major.Minor.Patch (semantic versioning)."""
+
 
 class OracleApp(textual.app.App):
     """Oracle app."""

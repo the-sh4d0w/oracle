@@ -51,3 +51,7 @@ Toast {
     margin-left: 2;
     width: auto;
 }
+
+Terminal {
+    scrollbar-size: 0 0;
+}
