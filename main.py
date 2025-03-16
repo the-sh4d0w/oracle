@@ -37,7 +37,7 @@ import widgets.website
 # TODO: config/settings?
 # FIXME: maybe add some useful methods to wrap calls to other functions
 
-__VERSION__ = 0, 2, 0
+__VERSION__ = 0, 2, 1
 """Game version as Major.Minor.Patch (semantic versioning)."""
 
 

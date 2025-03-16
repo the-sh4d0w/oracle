@@ -1,5 +1,6 @@
 """Custom terminal widget."""
 
+import copy
 import dataclasses
 import typing
 
@@ -20,8 +21,7 @@ import utils.command
 import utils.computer
 import utils.values
 
-# TODO: scrolling?
-# TODO: history
+# TODO: improve performance
 # TODO: ctrl+left and ctrl+right
 
 
@@ -116,10 +116,10 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
         """Do stuff on resize."""
         self._update_vlines()
 
-    def split_strip(self, strip: textual.strip.Strip, width: int) -> list[textual.strip.Strip]:
+    def _split_strip(self, strip: textual.strip.Strip, width: int) -> list[textual.strip.Strip]:
         """Split a strip into multiple strips to fit width."""
-        indices = list(range(width, (strip.cell_length // width + 1) * width, width)) \
-            + [strip.cell_length]
+        indices = list(set(range(width, (strip.cell_length // width + 1)
+                                 * width, width)).union({strip.cell_length}))
         return list(strip.divide(indices))
 
     def _update_vlines(self) -> None:
@@ -129,7 +129,7 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
             self._virtual_lines = []
             for line in self._lines:
                 self._virtual_lines.extend(
-                    self.split_strip(line, self.size.width))
+                    self._split_strip(line, self.size.width))
             self.virtual_size = textual.geometry.Size(
                 self.size.width, len(self._virtual_lines))
             self.scroll_end(animate=False)
@@ -230,17 +230,23 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
         _, scroll_y = self.scroll_offset
         y += scroll_y
         console = rich.console.Console(width=1_000_000)
-        if y < len(self._virtual_lines):
-            if y == len(self._virtual_lines) - 1:
-                value = rich.text.Text(self.value + " ")
-                if self.cursor_visible and self.has_focus:
-                    value.stylize(rich.style.Style(color="white", bgcolor="black", reverse=True),
-                                  self.cursor_position, self.cursor_position + 1)
-                input_segments = list(value.render(console))
-                if len(self._virtual_lines) > 0:
-                    return textual.strip.Strip([*self._virtual_lines[-1], *input_segments])
-                return textual.strip.Strip(input_segments)
-            return textual.strip.Strip(self._virtual_lines[y])
+        value_text = rich.text.Text(self.value + " ")
+        if self.cursor_visible and self.has_focus:
+            value_text.stylize(rich.style.Style(color="white", bgcolor="black", reverse=True),
+                               self.cursor_position, self.cursor_position + 1)
+        value_strip = textual.strip.Strip(value_text.render(console))
+        temp_lines: list[textual.strip.Strip] = copy.deepcopy(
+            self._virtual_lines)
+        if len(temp_lines) > 0:
+            last_line = temp_lines.pop()
+            temp_lines.extend(self._split_strip(textual.strip.Strip.join(
+                [last_line, value_strip]), self.size.width))
+        else:
+            temp_lines.append(value_strip)
+        self.virtual_size = textual.geometry.Size(
+            self.size.width, len(temp_lines))
+        if y < len(temp_lines):
+            return textual.strip.Strip(temp_lines[y])
         return textual.strip.Strip.blank(self.size.width)
 
     def on_terminal_submitted(self, event: Submitted) -> None:
@@ -250,9 +256,8 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
         console = rich.console.Console(width=1_000_000)
         self.history_value = -1
         self._history.insert(0, event.value)
-        # FIXME: improve
-        self._lines[-1]._segments.extend(
-            [*rich.text.Text(event.value).render(console)])
+        self._lines[-1] = textual.strip.Strip.join([self._lines[-1], textual.strip.Strip(
+            [*rich.text.Text(event.value).render(console)])])
         if self._callback:
             self._outputs.append(event.value)
             if len(self._input_prompts) == 0:
