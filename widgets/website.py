@@ -78,11 +78,11 @@ class Website(textual.widget.Widget):
     def pressed_website_button(self, event: textual.widgets.Button.Pressed) -> None:
         """Handle button pressed event for website_button."""
         event.stop()
-        search_switcher = self.app.query_one(
+        search_switcher = self.app.screen.query_one(
             "#search_switcher", textual.widgets.ContentSwitcher)
         if len(Website.web_history) > 0:
             last: str = Website.web_history.pop()
-            self.app.query_one("#display_inner",
+            self.app.screen.query_one("#display_inner",
                                textual.widgets.ContentSwitcher).current = last
             Website.website = last
         elif search_switcher.current == "search_page":

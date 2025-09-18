@@ -1,12 +1,11 @@
 """Custom terminal widget."""
 
+import asyncio
 import copy
 import dataclasses
-import typing
+import re
 
 import rich.console
-import rich.segment
-import rich.style
 import rich.text
 import textual.binding
 import textual.events
@@ -15,19 +14,20 @@ import textual.message
 import textual.reactive
 import textual.scroll_view
 import textual.strip
+import textual.theme
 import textual.timer
 
 import utils.command
-import utils.computer
+import utils.network
 import utils.values
 
+# TODO: pause terminal input while executing command to prevent entering additional text
 # TODO: improve performance
 # TODO: ctrl+left and ctrl+right
 
 
 class Terminal(textual.scroll_view.ScrollView, can_focus=True):
     """Custom terminal widget."""
-    # inspired by textual.widgets.Input
 
     BINDINGS = [
         textual.binding.Binding("left", "cursor_left",
@@ -42,6 +42,8 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
                                 "history back", show=False),
         textual.binding.Binding("down", "history_forward",
                                 "history forward", show=False),
+        textual.binding.Binding("tab", "complete",
+                                "complete command", show=False),
         textual.binding.Binding("enter", "submit",
                                 "submit", show=False),
         textual.binding.Binding("backspace", "delete_left",
@@ -50,12 +52,12 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
                                 "delete right", show=False)
     ]
 
-    prompts = textual.reactive.reactive([])
     value = textual.reactive.reactive("", always_update=True)
     cursor_position = textual.reactive.reactive(0)
     cursor_blink = textual.reactive.reactive(True, init=False)
     cursor_visible = textual.reactive.reactive(True)
     history_value = textual.reactive.reactive(-1)
+    cache_valid = textual.reactive.reactive(True)
     TERMINAL: "Terminal"
 
     @dataclasses.dataclass
@@ -64,29 +66,79 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
         terminal: "Terminal"
         value: str
 
-        @property
-        def control(self) -> "Terminal":
-            """Alias for self.terminal."""
-            return self.terminal
-
     def __init__(self, id_: str | None = None) -> None:
         """Initialize the terminal."""
         super().__init__(id=id_)
+        self._render_console: rich.console.Console = rich.console.Console(
+            highlight=False)
         self._blink_timer: textual.timer.Timer
-        self._lines: list[textual.strip.Strip] = []
-        self._virtual_lines: list[textual.strip.Strip] = []
+        self._lines: list[str] = []
+        # cache of rendered lines: rendered Strip, line index, type?
+        self._lines_cache: list[textual.strip.Strip] = []
         self._history: list[str] = []
-        # variable for command input handling
-        self._input_prompts: list[str] = []
-        self._outputs: list[str] = []
-        self._callback: typing.Callable[[str], None | str] | None = None
+        # variables for command input handling
+        self._input_event: asyncio.Event = asyncio.Event()
+        self._input_event.set()
+        self._input: str = ""
         # reference to self for commands
         Terminal.TERMINAL = self
-        # add first prompt
-        self.write_lines(utils.computer.NETWORK.computer.prompt)
+
+    def _replace_variables(self, text: str) -> str:
+        """Replace variables with values, both game and theme variables (e.g. $primary)."""
+        return re.sub(r"\[\$([a-zA-Z\-]+)\]", r"[{\1}]", text).format_map(
+            self.app.get_css_variables() | utils.values.VALUES.as_dict())
+
+    def _update_cache(self) -> None:
+        """Update cache of rendered lines."""
+        self._lines_cache.clear()
+        lines: list[str] = copy.copy(self._lines)
+        if len(lines) > 0:
+            lines[-1] += self.value
+        for line_text in lines:
+            line_text = self._replace_variables(line_text)
+            text: rich.text.Text = self._render_console.render_str(line_text)
+            for line in text.divide(range(self._render_console.width, text.cell_len,
+                                    self._render_console.width)):
+                self._lines_cache.append(textual.strip.Strip(
+                    line.render(self._render_console)))
+        self.virtual_size = textual.geometry.Size(self.size.width,
+                                                  len(self._lines_cache))
+
+    def _on_focus(self, event: textual.events.Focus) -> None:
+        """Do stuff on focus."""
+        event.stop()
+        self.cursor_position = len(self.value)
+        if self.cursor_blink:
+            self._blink_timer.resume()
+
+    def _on_mount(self, event: textual.events.Mount) -> None:
+        """Do stuff on mount."""
+        event.stop()
+        self._blink_timer = self.set_interval(
+            0.5, self.toggle_cursor, pause=not (self.cursor_blink and self.has_focus))
+        self.app.theme_changed_signal.subscribe(self, self.on_theme_change)
+        self.write_lines(utils.network.NETWORK.computer.prompt)
+
+    async def _on_key(self, event: textual.events.Key) -> None:
+        """Do stuff on key."""
+        if self.cursor_blink:
+            self._blink_timer.reset()
+        if event.is_printable:
+            event.stop()
+            self.scroll_end(animate=False, immediate=True, force=True)
+            assert event.character is not None
+            if self.cursor_position >= len(self.value):
+                self.value += event.character
+                self.cursor_position = len(self.value)
+            else:
+                self.value = self.value[:self.cursor_position] + \
+                    event.character + self.value[self.cursor_position:]
+                self.cursor_position += 1
+            event.prevent_default()
 
     def watch_value(self, value: str) -> None:
         """Watch the value."""
+        self.cache_valid = False
         if self.cursor_position <= 0:
             self.cursor_position = 0
         elif self.cursor_position >= len(value):
@@ -112,73 +164,15 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
             # a bit cursed, but it works
             self.cursor_position = 1_000_000
 
-    def on_resize(self, _: textual.events.Resize) -> None:
-        """Do stuff on resize."""
-        self._update_vlines()
+    def watch_cache_valid(self, valid: bool) -> None:
+        """Watch the cache valid value."""
+        if not valid:
+            self._update_cache()
+            self.cache_valid = True
 
-    def _split_strip(self, strip: textual.strip.Strip, width: int) -> list[textual.strip.Strip]:
-        """Split a strip into multiple strips to fit width."""
-        indices = list(set(range(width, (strip.cell_length // width + 1)
-                                 * width, width)).union({strip.cell_length}))
-        return list(strip.divide(indices))
-
-    def _update_vlines(self) -> None:
-        """Update virtual lines."""
-        # cursed, kinda
-        if self.size.width:
-            self._virtual_lines = []
-            for line in self._lines:
-                self._virtual_lines.extend(
-                    self._split_strip(line, self.size.width))
-            self.virtual_size = textual.geometry.Size(
-                self.size.width, len(self._virtual_lines))
-            self.scroll_end(animate=False)
-
-    def write_lines(self, lines: str) -> None:
-        """Write lines."""
-        console = rich.console.Console(width=1_000_000)
-        for line_text in lines.split("\n"):
-            line_text = line_text.format_map(utils.values.VALUES.as_dict())
-            strip = textual.strip.Strip(list(console.render(line_text))[:-1])
-            self._lines.append(strip)
-        self._update_vlines()
-
-    def input(self, callback: typing.Callable[..., None | str], *prompts: str) -> None:
-        """Do input."""
-        input_prompts: list[str] = list(prompts)
-        self.write_lines(input_prompts.pop(0))
-        self._input_prompts = input_prompts
-        self._callback = callback
-
-    def clear(self):
-        """Clear the terminal."""
-        self._lines = []
-        self.virtual_size = textual.geometry.Size(
-            self.size.width, len(self._virtual_lines))
-
-    async def _on_key(self, event: textual.events.Key) -> None:
-        """Do stuff on key."""
-        if self.cursor_blink:
-            self._blink_timer.reset()
-        if event.is_printable:
-            event.stop()
-            self.scroll_end(animate=False)
-            assert event.character is not None
-            if self.cursor_position >= len(self.value):
-                self.value += event.character
-                self.cursor_position = len(self.value)
-            else:
-                self.value = self.value[:self.cursor_position] + \
-                    event.character + self.value[self.cursor_position:]
-                self.cursor_position += 1
-            event.prevent_default()
-
-    def _on_focus(self, event: textual.events.Focus) -> None:
-        """Do stuff on focus."""
-        event.stop()
-        self.cursor_position = len(self.value)
-        if self.cursor_blink:
-            self._blink_timer.resume()
+    def watch_app_theme(self, _: str) -> None:
+        """Watch the app theme."""
+        self.cache_valid = False
 
     def action_cursor_left(self) -> None:
         """Handle cursor left action."""
@@ -195,6 +189,14 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
     def action_history_forward(self) -> None:
         """Handle history forward action."""
         self.history_value -= 1
+
+    def action_complete(self) -> None:
+        """Handle complete action."""
+        for cmd_name in sorted(utils.command.get_commands()):
+            if cmd_name.startswith(self.value):
+                self.value = cmd_name
+                self.cursor_position = 1_000_000
+                break
 
     def action_submit(self) -> None:
         """Handle submit action."""
@@ -219,56 +221,65 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
         """Toggle visibility of cursor."""
         self.cursor_visible = not self.cursor_visible
 
-    def _on_mount(self, event: textual.events.Mount) -> None:
-        """Do stuff on mount."""
+    def on_resize(self, event: textual.events.Resize) -> None:
+        """Do stuff on resize."""
+        self._render_console.width = event.size.width
+        self.cache_valid = False
+
+    def on_theme_change(self, _: textual.theme.Theme) -> None:
+        """Do stuff on theme change."""
+        self.cache_valid = False
+
+    async def on_terminal_submitted(self, event: Submitted) -> None:
+        """Handle terminal submit event."""
+        # still a bit cursed, but it could be so much worse
         event.stop()
-        self._blink_timer = self.set_interval(
-            0.5, self.toggle_cursor, pause=not (self.cursor_blink and self.has_focus))
+        # 'normal' input
+        if self._input_event.is_set():
+            self.history_value = -1
+            if event.value:
+                self._history.insert(0, event.value)
+                asyncio.create_task(utils.command.parse(event.value))
+            else:
+                self.write_lines(utils.network.NETWORK.computer.prompt)
+        # command input
+        else:
+            self._input_event.set()
+            self._input = event.value
+        # add input to last line
+        self._lines[-1] += event.value
+
+    def write_lines(self, text: str) -> None:
+        """Write lines to the terminal."""
+        for line_text in text.split("\n"):
+            self._lines.append(line_text)
+            line_text = self._replace_variables(line_text)
+        self.cache_valid = False
+        self.virtual_size = textual.geometry.Size(self.size.width,
+                                                  len(self._lines_cache))
+        self.scroll_end(animate=False, immediate=True, force=True)
+
+    async def get_input(self, prompt: str) -> str:
+        """Get input."""
+        self.write_lines(prompt)
+        self._input_event.clear()
+        await self._input_event.wait()
+        result = self._input
+        return result
+
+    def clear(self):
+        """Clear the terminal."""
+        self._lines.clear()
+        self.cache_valid = False
 
     def render_line(self, y: int) -> textual.strip.Strip:
         """Render a line."""
         _, scroll_y = self.scroll_offset
         y += scroll_y
-        console = rich.console.Console(width=1_000_000)
-        value_text = rich.text.Text(self.value + " ")
-        if self.cursor_visible and self.has_focus:
-            value_text.stylize(rich.style.Style(color="white", bgcolor="black", reverse=True),
-                               self.cursor_position, self.cursor_position + 1)
-        value_strip = textual.strip.Strip(value_text.render(console))
-        temp_lines: list[textual.strip.Strip] = copy.deepcopy(
-            self._virtual_lines)
-        if len(temp_lines) > 0:
-            last_line = temp_lines.pop()
-            temp_lines.extend(self._split_strip(textual.strip.Strip.join(
-                [last_line, value_strip]), self.size.width))
-        else:
-            temp_lines.append(value_strip)
-        self.virtual_size = textual.geometry.Size(
-            self.size.width, len(temp_lines))
-        if y < len(temp_lines):
-            return textual.strip.Strip(temp_lines[y])
-        return textual.strip.Strip.blank(self.size.width)
-
-    def on_terminal_submitted(self, event: Submitted) -> None:
-        """Handle terminal submit event."""
-        # still a bit cursed, but it could be so much worse
-        event.stop()
-        console = rich.console.Console(width=1_000_000)
-        self.history_value = -1
-        self._history.insert(0, event.value)
-        self._lines[-1] = textual.strip.Strip.join([self._lines[-1], textual.strip.Strip(
-            [*rich.text.Text(event.value).render(console)])])
-        if self._callback:
-            self._outputs.append(event.value)
-            if len(self._input_prompts) == 0:
-                if (output := self._callback(*self._outputs)):
-                    self.write_lines(output)
-                self._outputs = []
-                self._callback = None
-            else:
-                self.write_lines(self._input_prompts.pop(0))
-        elif event.value:
-            if (output := utils.command.parse(event.value)):
-                self.write_lines(output)
-        if not self._callback:
-            self.write_lines(utils.computer.NETWORK.computer.prompt)
+        try:
+            # FIXME: figure out how to detect the input line
+            # if self.cursor_visible and self.has_focus:
+            #     return self._lines_cache[y]
+            return self._lines_cache[y]
+        except IndexError:
+            return textual.strip.Strip.blank(self.size.width)

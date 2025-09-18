@@ -6,6 +6,7 @@
 
 #website_button {
     background: $primary;
+    color: white;
     border: none;
     min-width: 1;
 }

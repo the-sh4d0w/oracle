@@ -1,26 +1,28 @@
 """Basic commands."""
 
-import ipaddress
-
 import click
 
 import utils.command
-import utils.computer
+import utils.device
+import utils.network
 import utils.values
 import widgets.terminal
 
 
-@click.command(add_help_option=False)
+@click.command()
 @click.argument("command", type=click.STRING, default="")
-def help(command: str) -> str:  # pylint:disable=redefined-builtin
+def help(command: str) -> None:  # pylint:disable=redefined-builtin
     """Show help for COMMAND or list all commands without COMMAND parameter."""
     if command == "":
-        return "\n".join([f"{name:10} {cmd.__doc__}"
-                          for name, cmd in sorted(utils.command.COMMANDS.items())])
-    if command in utils.command.COMMANDS:
-        return str(utils.command.COMMANDS[command].get_help(
-            click.Context(utils.command.COMMANDS[command])))
-    return f"No help exists for '{command}'."
+        result: list[str] = []
+        for name, cmd in sorted(utils.command.COMMANDS.items()):
+            result.append(f"[$primary]{name:10}[/] {cmd.__doc__}")
+        utils.command.print("\n".join(result))
+    elif command in utils.command.COMMANDS:
+        utils.command.print(str(utils.command.COMMANDS[command].get_help(
+            click.Context(utils.command.COMMANDS[command]))))
+    else:
+        utils.command.print(f"No help exists for '{command}'.")
 
 
 def logout_save() -> None:
@@ -29,55 +31,50 @@ def logout_save() -> None:
     # TODO: save data
 
 
-def logout_confirm(answer: str) -> None:
-    """Check if player actually wants to log out."""
-    if answer.lower() in ("y", "yes"):
-        logout_save()
-
-
 @click.command()
 @click.option("-y", "--yes", is_flag=True, help="Skip confirmation.")
-def logout(yes: bool) -> None:
+async def logout(yes: bool) -> None:
     """Log out and save data."""
     if yes:
         logout_save()
     else:
-        widgets.terminal.Terminal.TERMINAL.input(
-            logout_confirm, "Do you want to log out? (y/N) ")
+        answer = await utils.command.input("Do you want to log out? (y/N) ")
+        if answer.lower() in ("y", "yes"):
+            logout_save()
 
 
 @click.command()
 def clear() -> None:
     """Clear the terminal."""
-    widgets.terminal.Terminal.TERMINAL.clear()
+    utils.command.clear()
 
 
 @click.command()
-def ofetch() -> str:
+def ofetch() -> None:
     """Display system information."""
     # FIXME: match information to boot screen
-    return r"""
- [{primary}]$$$$$$$$$[/]\    [{primary}]{user}@{name}[/]
- [{primary}]$$[/]  ___[{primary}]$$[/] |   -------------
- [{primary}]$$[/] |   [{primary}]$$[/] |   [{primary}]OS[/]: oracleOS v1.17
- [{primary}]$$[/] |   [{primary}]$$[/] |   [{primary}]Kernel[/]: v0.15.8.34
- [{primary}]$$[/] |   [{primary}]$$[/] |   [{primary}]Uptime[/]: calculate this
- [{primary}]$$[/] |   [{primary}]$$[/] |   [{primary}]Shell[/]: bosh 5.1.4
- [{primary}]$$$$$$$$$[/] |   [{primary}]CPU[/]: Cyclops i803 (8) @ 1.799GHz
- \_________|   [{primary}]Memory[/]: 198MiB / 7812MiB
-""".format_map(utils.values.VALUES.as_dict())
+    utils.command.print(r"""
+ [$primary]$$$$$$$$$[/]\    [$primary]{user}@{name}[/]
+ [$primary]$$[/]  ___[$primary]$$[/] |   -------------
+ [$primary]$$[/] |   [$primary]$$[/] |   [$primary]OS[/]: oracleOS v1.17
+ [$primary]$$[/] |   [$primary]$$[/] |   [$primary]Kernel[/]: v0.15.8.34
+ [$primary]$$[/] |   [$primary]$$[/] |   [$primary]Uptime[/]: calculate this
+ [$primary]$$[/] |   [$primary]$$[/] |   [$primary]Shell[/]: bosh 5.1.4
+ [$primary]$$$$$$$$$[/] |   [$primary]CPU[/]: Cyclops i803 (8) @ 1.799GHz
+ \_________|   [$primary]Memory[/]: 198MiB / 7812MiB
+""".format_map(utils.values.VALUES.as_dict()))
 
 
 @click.command()
-def pwd() -> str:
+def pwd() -> None:
     """Print working directory."""
-    return utils.computer.NETWORK.file_system.pwd()
+    utils.command.print(utils.network.NETWORK.file_system.pwd())
 
 
 @click.command()
 @click.option("-l", is_flag=True, help="Format as list.")
 @click.option("-a", "--all", is_flag=True, help="Show dot-prefixed files and directories.")
-def ls(l: bool, all: bool) -> str | None:  # pylint:disable=redefined-builtin
+def ls(l: bool, all: bool) -> None:  # pylint:disable=redefined-builtin
     """List files and directories."""
     # TODO: add option to list specific folder
     # feels a bit cursed
@@ -85,7 +82,7 @@ def ls(l: bool, all: bool) -> str | None:  # pylint:disable=redefined-builtin
     files: list[str] | None
     header: str = "[bold italic]type       size    name[/]\n"
     output: str = ""
-    directories, files = utils.computer.NETWORK.file_system.ls(l, all)
+    directories, files = utils.network.NETWORK.file_system.ls(l, all)
     if directories is not None:
         output += ("\n" if l else " ").join(directories)
     if files is not None:
@@ -94,50 +91,49 @@ def ls(l: bool, all: bool) -> str | None:  # pylint:disable=redefined-builtin
         output += ("\n" if l else " ").join(files)
     if l and output != "":
         output = header + output
-    return output if output != "" else None
+    if output:
+        utils.command.print(output)
 
 
 @click.command()
 @click.argument("path", type=click.STRING, default="")
-def cd(path: str) -> str | None:
+def cd(path: str) -> None:
     """Change directory to PATH."""
-    return utils.computer.NETWORK.file_system.cd(path)
-
-
-def login_verify(user: str, password: str) -> str:
-    """Verify login."""
-    if user == password == "admin":
-        return "Sucessfully logged in!"
-    return "Wrong username or password."
+    if output := utils.network.NETWORK.file_system.cd(path):
+        utils.command.print(output)
 
 
 @click.command()
-def login() -> None:
+async def login() -> None:
     """Login to the computer."""
     # TODO: implement login (computer) functionality
-    widgets.terminal.Terminal.TERMINAL.input(
-        login_verify, "user: ", "pasword: ")
+    user = await utils.command.input("user: ")
+    password = await utils.command.input("passsword: ")
+    if user == password == "admin":
+        utils.command.print("Succcessfully logged in!")
+    else:
+        utils.command.print("Wrong username or password.")
 
 
 @click.command()
-def scan() -> str | None:
+def scan() -> None:
     """Scan for connected computers."""
-    nodes = utils.computer.NETWORK.scan()
+    nodes = utils.network.NETWORK.scan()
     if len(nodes) == 0:
-        return "No connected devices found."
-    return "\n".join([str(node) for node in nodes])
+        utils.command.print("No connected devices found.")
+    else:
+        utils.command.print("\n".join([str(node) for node in nodes]))
 
 
 @click.command()
 @click.argument("ip_address", type=click.STRING)
-def connect(ip_address: str) -> str | None:
+def connect(ip_address: str) -> None:
     """Connect to the computer with the IP_ADDRESS."""
-    if not utils.computer.NETWORK.connect(ipaddress.IPv4Address(ip_address)):
-        return "Could not connect."
-    return None
+    if not utils.network.NETWORK.connect(utils.device.NPv5Address(ip_address)):
+        utils.command.print("Could not connect.")
 
 
 @click.command()
 def exit() -> None:  # pylint:disable=redefined-builtin
     """Exit the current computer."""
-    utils.computer.NETWORK.disconnect()
+    utils.network.NETWORK.disconnect()

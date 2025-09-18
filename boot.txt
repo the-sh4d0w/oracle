@@ -40,29 +40,29 @@ Copyright (c) 2097 - 2124
 University of New Hampshire. All rights reserved.
 Revived in 2136 with some modifications by [#FF0000]zer0[/] :)
 
-sysboot[[#6495ED]1[/]]: reset all filesystems
-sysboot[[#6495ED]1[/]]: mount system@dev-dsk/uuid-34d08-f1e2-a75b
-sysboot[[#6495ED]1[/]]: filesystem check disk
-sysboot[[#6495ED]1[/]]: stopped target Local
-sysboot[[#6495ED]1[/]]: service setup - tmp/mov/log
-sysboot[[#6495ED]1[/]]: load users/system
-sysboot[[#6495ED]1[/]]: remount DSK-1
-sysboot[[#6495ED]1[/]]: journal: final reached
+sysboot\[[#6495ED]1[/]]: reset all filesystems
+sysboot\[[#6495ED]1[/]]: mount system@dev-dsk/uuid-34d08-f1e2-a75b
+sysboot\[[#6495ED]1[/]]: filesystem check disk
+sysboot\[[#6495ED]1[/]]: stopped target Local
+sysboot\[[#6495ED]1[/]]: service setup - tmp/mov/log
+sysboot\[[#6495ED]1[/]]: load users/system
+sysboot\[[#6495ED]1[/]]: remount DSK-1
+sysboot\[[#6495ED]1[/]]: journal: final reached
 
-[ [#00FF00]OK[/] ] Started Kernel Load
-[ [#00FF00]OK[/] ] Reached master record
-[ [#00FF00]OK[/] ] Started LSB: target boot
-[ [#00FF00]OK[/] ] Started daemon
-[ [#00FF00]OK[/] ] Started Network Manager
-[ [#00FF00]OK[/] ] Started Hostname Service
-[ [#00FF00]OK[/] ] Finished Snapshot Check
-[ [#FF0000]FAILED[/] ] Loading Logging Module
-[ [#00FF00]OK[/] ] Started User Manager
-[ [#00FF00]OK[/] ] Started Authorization Handler
-[ [#00FF00]OK[/] ] Started DISK Service
-[ [#00FF00]OK[/] ] Started Graphic Interface
-[ [#00FF00]OK[/] ] Started Account Manager
-[ [#00FF00]OK[/] ] Loading Login Screen
+\[ [#00FF00]OK[/] ] Started Kernel Load
+\[ [#00FF00]OK[/] ] Reached master record
+\[ [#00FF00]OK[/] ] Started LSB: target boot
+\[ [#00FF00]OK[/] ] Started daemon
+\[ [#00FF00]OK[/] ] Started Network Manager
+\[ [#00FF00]OK[/] ] Started Hostname Service
+\[ [#00FF00]OK[/] ] Finished Snapshot Check
+\[ [#FF0000]FAILED[/] ] Loading Logging Module
+\[ [#00FF00]OK[/] ] Started User Manager
+\[ [#00FF00]OK[/] ] Started Authorization Handler
+\[ [#00FF00]OK[/] ] Started DISK Service
+\[ [#00FF00]OK[/] ] Started Graphic Interface
+\[ [#00FF00]OK[/] ] Started Account Manager
+\[ [#00FF00]OK[/] ] Loading Login Screen
 
 [#FFD700]Boot Complete[/]
 

@@ -1,6 +1,7 @@
 """Debug widget."""
 
 import textual.app
+import textual.containers
 import textual.widget
 import textual.widgets
 
@@ -16,5 +17,6 @@ class DebugWidget(textual.widget.Widget):
 
     def compose(self) -> textual.app.ComposeResult:
         """Compose the ui."""
-        yield textual.widgets.Label(f"Game version: {'.'.join(map(str, main.__VERSION__))}")
-        yield textual.widgets.Placeholder()
+        with textual.containers.ScrollableContainer():
+            yield textual.widgets.Label(f"Game version: {'.'.join(map(str, main.__VERSION__))}",
+                                        id="debug_version")

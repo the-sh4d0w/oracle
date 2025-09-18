@@ -2,14 +2,17 @@
 
 import dataclasses
 
-import utils.computer
-import widgets.terminal
+import utils.network
 
 
 @dataclasses.dataclass
 class GameValues:
     """Game values."""
-    debug: bool = False
+
+    def __init__(self) -> None:
+        """Initialise game values."""
+        self.debug: bool = False
+        self.noboot: bool = False
 
 
 @dataclasses.dataclass
@@ -22,15 +25,14 @@ class TextValues:
 
     def update(self) -> None:
         """Update values."""
-        self.user = utils.computer.NETWORK.computer.user
-        self.name = utils.computer.NETWORK.computer.name
-        self.path = utils.computer.NETWORK.computer.file_system.pwd()
+        self.user = utils.network.NETWORK.computer.username
+        self.name = utils.network.NETWORK.computer.name
+        self.path = utils.network.NETWORK.computer.file_system.pwd()
 
     def as_dict(self) -> dict[str, str | None]:
-        """Get values and theme colours as dict. Also updates values."""
+        """Get values as dict. Also updates values."""
         self.update()
-        # cursed
-        return {**self.__dict__, **widgets.terminal.Terminal.TERMINAL.app.get_css_variables()}
+        return self.__dict__
 
 
 GAME_VALUES = GameValues()

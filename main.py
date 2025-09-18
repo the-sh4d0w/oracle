@@ -21,7 +21,7 @@ import screens.boot
 import screens.login
 import screens.desktop
 import utils.computer
-import utils.themes
+import utils.shared
 import utils.values
 import widgets.chat
 import widgets.terminal
@@ -43,32 +43,19 @@ __VERSION__ = 0, 2, 1
 
 class OracleApp(textual.app.App):
     """Oracle app."""
-    if not utils.values.GAME_VALUES.debug:
-        ENABLE_COMMAND_PALETTE = False
     # load all styles from styles/
     CSS_PATH = list(pathlib.Path("styles").iterdir())
-
-    def __init__(self, no_boot: bool = False) -> None:
-        """Initialize the oracle app.
-
-        Arguments:
-            - no_boot: skips boot screen if True.
-            - debug: adds debug menu if True.
-        """
-        super().__init__()
-        # debug / dev flags
-        self._no_boot: bool = no_boot
 
     def on_mount(self) -> None:
         """Do stuff on mount."""
         self.push_screen(screens.login.LoginScreen())
-        if not self._no_boot:
+        if not utils.values.GAME_VALUES.noboot:
             self.push_screen(screens.boot.BootScreen())
 
     def action_link(self, target: str) -> None:
         """Handle link action."""
         # taken from Website.switch_website
-        display: textual.widgets.ContentSwitcher = self.query_one(
+        display: textual.widgets.ContentSwitcher = self.screen.query_one(
             "#display_inner", textual.widgets.ContentSwitcher)
         widgets.website.Website.web_history.append(
             typing.cast(str, display.current))
@@ -81,8 +68,8 @@ class OracleApp(textual.app.App):
         Arguments:
             - widget_id: the id of the widget to add a notification for (should be own id).
         """
-        self.query_one("#desktop", screens.desktop.DesktopScreen
-                       ).add_notification(widget_id)
+        typing.cast(screens.desktop.DesktopScreen,
+                    self.app.screen).add_notification(widget_id)
 
 
 @click.command()
@@ -90,8 +77,11 @@ class OracleApp(textual.app.App):
 @click.option("-d", "--debug", is_flag=True, help="Add a debug menu.")
 def main(noboot: bool = False, debug: bool = False) -> None:
     """The oracle game."""
+    # set debug/dev variables
+    utils.values.GAME_VALUES.noboot = noboot
     utils.values.GAME_VALUES.debug = debug
-    OracleApp(no_boot=noboot).run()
+    OracleApp.ENABLE_COMMAND_PALETTE = debug
+    OracleApp().run()
 
 
 if __name__ == "__main__":
