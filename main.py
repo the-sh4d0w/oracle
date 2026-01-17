@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Main code for the oracle game prototype."""
 
 import pathlib
@@ -5,26 +6,12 @@ import typing
 
 import click
 import textual.app
-import textual.binding
-import textual.containers
-import textual.design
-import textual.events
-import textual.message
-import textual.reactive
-import textual.screen
-import textual.strip
-import textual.timer
-import textual.widget
 import textual.widgets
 
 import screens.boot
 import screens.login
 import screens.desktop
-import utils.computer
-import utils.shared
 import utils.values
-import widgets.chat
-import widgets.terminal
 import widgets.website
 
 # TODO:

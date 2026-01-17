@@ -34,13 +34,13 @@
 }
 
 .login_button {
-    background: white;
+    background: transparent;
     border: none;
-    text-style: reverse;
     min-width: 1;
 }
 
-.login_button:focus {
+.login_button:hover {
+    background: white;
     text-style: reverse;
 }
 

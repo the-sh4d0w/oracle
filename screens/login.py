@@ -13,6 +13,10 @@ import utils.save
 import utils.values
 
 
+class SimpleButton(textual.widgets.Button, can_focus=False):
+    """Simple button."""
+
+
 class ListUsersScreen(textual.screen.ModalScreen):
     """List users modal screen."""
 
@@ -133,11 +137,11 @@ class LoginScreen(textual.screen.Screen):
             yield textual.widgets.Input(id="login_user")
             yield textual.widgets.Input(password=True, id="login_pwd")
             with textual.containers.Horizontal(id="login_box"):
-                yield textual.widgets.Button("log in", id="login_button", classes="login_button")
+                yield SimpleButton("log in", id="login_button", classes="login_button")
         with textual.containers.Horizontal(id="login_hor"):
-            yield textual.widgets.Button("list users", id="login_list", classes="login_button")
-            yield textual.widgets.Button("create user", id="login_create", classes="login_button")
-            yield textual.widgets.Button("shutdown", id="login_shutdown", classes="login_button")
+            yield SimpleButton("list users", id="login_list", classes="login_button")
+            yield SimpleButton("create user", id="login_create", classes="login_button")
+            yield SimpleButton("shutdown", id="login_shutdown", classes="login_button")
 
     def on_input_submitted(self, event: textual.widgets.Input.Submitted) -> None:
         """Handle input submitted event."""
