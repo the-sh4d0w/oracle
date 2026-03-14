@@ -49,20 +49,20 @@ sysboot\[[#6495ED]1[/]]: load users/system
 sysboot\[[#6495ED]1[/]]: remount DSK-1
 sysboot\[[#6495ED]1[/]]: journal: final reached
 
-\[ [#00FF00]OK[/] ] Started Kernel Load
-\[ [#00FF00]OK[/] ] Reached master record
-\[ [#00FF00]OK[/] ] Started LSB: target boot
-\[ [#00FF00]OK[/] ] Started daemon
-\[ [#00FF00]OK[/] ] Started Network Manager
-\[ [#00FF00]OK[/] ] Started Hostname Service
-\[ [#00FF00]OK[/] ] Finished Snapshot Check
+\[   [#00FF00]OK[/]   ] Started Kernel Load
+\[   [#00FF00]OK[/]   ] Reached master record
+\[   [#00FF00]OK[/]   ] Started LSB: target boot
+\[   [#00FF00]OK[/]   ] Started daemon
+\[   [#00FF00]OK[/]   ] Started Network Manager
+\[   [#00FF00]OK[/]   ] Started Hostname Service
+\[   [#00FF00]OK[/]   ] Finished Snapshot Check
 \[ [#FF0000]FAILED[/] ] Loading Logging Module
-\[ [#00FF00]OK[/] ] Started User Manager
-\[ [#00FF00]OK[/] ] Started Authorization Handler
-\[ [#00FF00]OK[/] ] Started DISK Service
-\[ [#00FF00]OK[/] ] Started Graphic Interface
-\[ [#00FF00]OK[/] ] Started Account Manager
-\[ [#00FF00]OK[/] ] Loading Login Screen
+\[   [#00FF00]OK[/]   ] Started User Manager
+\[   [#00FF00]OK[/]   ] Started Authorization Handler
+\[   [#00FF00]OK[/]   ] Started DISK Service
+\[   [#00FF00]OK[/]   ] Started Graphic Interface
+\[   [#00FF00]OK[/]   ] Started Account Manager
+\[   [#00FF00]OK[/]   ] Loading Login Screen
 
 [#FFD700]Boot Complete[/]
 

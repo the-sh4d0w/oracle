@@ -22,8 +22,31 @@ import utils.network
 import utils.values
 
 # TODO: pause terminal input while executing command to prevent entering additional text
-# TODO: improve performance
+# TODO: improve performance (by only rerendering relevant cache parts)
 # TODO: ctrl+left and ctrl+right
+
+
+class InteractiveComponent:
+    """Interactive component for the terminal."""
+    # FIXME: this needs to render to something
+
+
+@dataclasses.dataclass
+class TerminalLine:
+    """Terminal line."""
+    # FIXME: we need to be able to access the cached lines by y index and at the same time \
+    # keep the original lines/text; both should be accessable without expensive lookups, so \
+    # (optimally O(1)); main problem is one text line mapping to multiple cached lines (1:n)
+    # FIXME: also need to keep interactive components in mind; they need to be one thing \
+    # over multiple lines -> this should probably influence our general design
+    line_text: str
+    cached_line: textual.strip.Strip
+    flag: int
+    y_index: int
+
+
+class LineCache:
+    """Cache of rendered lines."""
 
 
 class Terminal(textual.scroll_view.ScrollView, can_focus=True):
@@ -69,9 +92,9 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
     def __init__(self, id_: str | None = None) -> None:
         """Initialize the terminal."""
         super().__init__(id=id_)
+        self._blink_timer: textual.timer.Timer
         self._render_console: rich.console.Console = rich.console.Console(
             highlight=False)
-        self._blink_timer: textual.timer.Timer
         self._lines: list[str] = []
         # cache of rendered lines: rendered Strip, line index, type?
         self._lines_cache: list[textual.strip.Strip] = []
@@ -88,12 +111,21 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
         return re.sub(r"\[\$([a-zA-Z\-]+)\]", r"[{\1}]", text).format_map(
             self.app.get_css_variables() | utils.values.VALUES.as_dict())
 
+    def _update_cache_line(self, y: int) -> None:
+        """Update specified cache line.
+
+        Arguments:
+            - y: index of line.
+        """
+
     def _update_cache(self) -> None:
         """Update cache of rendered lines."""
         self._lines_cache.clear()
         lines: list[str] = copy.copy(self._lines)
         if len(lines) > 0:
             lines[-1] += self.value
+            # if self.cursor_visible and self.has_focus:
+            #     lines[-1] += "[black on white]*[/]"
         for line_text in lines:
             line_text = self._replace_variables(line_text)
             text: rich.text.Text = self._render_console.render_str(line_text)
@@ -125,7 +157,6 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
             self._blink_timer.reset()
         if event.is_printable:
             event.stop()
-            self.scroll_end(animate=False, immediate=True, force=True)
             assert event.character is not None
             if self.cursor_position >= len(self.value):
                 self.value += event.character
@@ -139,6 +170,7 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
     def watch_value(self, value: str) -> None:
         """Watch the value."""
         self.cache_valid = False
+        self.scroll_end(animate=False, immediate=True, force=True)
         if self.cursor_position <= 0:
             self.cursor_position = 0
         elif self.cursor_position >= len(value):
@@ -278,8 +310,8 @@ class Terminal(textual.scroll_view.ScrollView, can_focus=True):
         y += scroll_y
         try:
             # FIXME: figure out how to detect the input line
-            # if self.cursor_visible and self.has_focus:
-            #     return self._lines_cache[y]
+            if self.cursor_visible and self.has_focus:
+                pass
             return self._lines_cache[y]
         except IndexError:
             return textual.strip.Strip.blank(self.size.width)

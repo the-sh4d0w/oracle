@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Main code for the oracle game prototype."""
 
 import pathlib
